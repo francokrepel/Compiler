@@ -41,7 +41,7 @@ public final class Lexer {
      */
     public Token lexToken() { //TODO
 
-        if (peek("^@?[^0-9_-][A-Za-z0-9_-]*$")) {  //Still need to finish regex for Identifier
+        if (peek("^[@A-Za-z][A-Za-z0-9_-]*$")) {  //Still need to finish regex for Identifier
             return lexIdentifier();
         } else if () {
 
