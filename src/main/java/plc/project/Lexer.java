@@ -39,8 +39,13 @@ public final class Lexer {
      * The next character should start a valid token since whitespace is handled
      * by {@link #lex()}
      */
-    public Token lexToken() {
-        throw new UnsupportedOperationException(); //TODO
+    public Token lexToken() { //TODO
+
+        if (peek("[A-Za-z0-9_-]")) {  //Still need to finish regex for Identifier
+            return lexIdentifier();
+        } else if () {
+
+        }
     }
 
     public Token lexIdentifier() {
