@@ -43,8 +43,14 @@ public final class Lexer {
 
         if (peek("^[@A-Za-z][A-Za-z0-9_-]*$")) {  //Still need to finish regex for Identifier
             return lexIdentifier();
-        } else if () {
-
+        } else if (peek("^[1-9][0-9]*$")) {
+            return lexNumber();
+        } else if (peek("")) {
+            return lexCharacter();
+        } else if (peek("")) {
+            return lexString();
+        } else if (peek("")) {
+            return lexOperator();
         }
     }
 
