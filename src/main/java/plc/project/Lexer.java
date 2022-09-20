@@ -41,15 +41,17 @@ public final class Lexer {
      */
     public Token lexToken() { //TODO
 
-        if (peek("^[@A-Za-z][A-Za-z0-9_-]*$")) {  //Still need to finish regex for Identifier
+        if (peek("^(@|[A-Za-z])[A-Za-z0-9_-]*$")) {  //Still need to finish regex for Identifier
             return lexIdentifier();
-        } else if (peek("^-?[1-9][0-9]*$")) {
-            return lexNumber();
-        } else if (peek("")) {
-            return lexCharacter();
-        } else if (peek("")) {
+        } else if (peek("^(-?[1-9][0-9]*)|0$")) {
+            return lexNumber(); // Integer
+        } else if (peek("^-?([1-9][0-9]*|0)\\.[0-9]+$")) {
+            return lexNumber(); // Decimal
+        } else if (peek("^'([^'\\n\\r\\\\]|\\\\[bnrt'\"\\\\])'$")) {
+            return lexCharacter(); // allows space? on regexr.com atleast
+        } else if (peek("^\"([^\"\\n\\r\\\\]|\\\\[bnrt'\"\\\\])*\"$")) {
             return lexString();
-        } else if (peek("")) {
+        } else if (peek("^([!=]=)|&&|\\|\\||[^\\b\\n\\r\\t]$")) {
             return lexOperator();
         }
     }
