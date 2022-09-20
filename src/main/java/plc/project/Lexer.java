@@ -39,9 +39,16 @@ public final class Lexer {
      * The next character should start a valid token since whitespace is handled
      * by {@link #lex()}
      */
-    public Token lexToken() { //TODO
 
-        if (peek("^(@|[A-Za-z])[A-Za-z0-9_-]*$")) {  //Still need to finish regex for Identifier
+
+    /**
+     * for character and srting first part:
+     * we negate new line and return because we dont want the input to be a literal
+     * new line or return when inputed in java . you cant have these quoted literals.
+     */
+    public Token lexToken() { //TODO
+        // remember its top-to-bottom, thats why operator will catch 'any character' not previoulst caught
+        if (peek("^(@|[A-Za-z])[A-Za-z0-9_-]*$")) {
             return lexIdentifier();
         } else if (peek("^(-?[1-9][0-9]*)|0$")) {
             return lexNumber(); // Integer
@@ -51,9 +58,13 @@ public final class Lexer {
             return lexCharacter(); // allows space? on regexr.com atleast
         } else if (peek("^\"([^\"\\n\\r\\\\]|\\\\[bnrt'\"\\\\])*\"$")) {
             return lexString();
+//        } else if (peek("^\\\\[bnrt'\"\\\\]$")) {
+//            return lexEscape();
         } else if (peek("^([!=]=)|&&|\\|\\||[^\\b\\n\\r\\t]$")) {
             return lexOperator();
         }
+
+        throw new ParseException("Could not lex Token, failed at index ", chars.index);
     }
 
     public Token lexIdentifier() {
@@ -85,7 +96,15 @@ public final class Lexer {
      * which should be a regex. For example, {@code peek("a", "b", "c")} would
      * return true if the next characters are {@code 'a', 'b', 'c'}.
      */
-    public boolean peek(String... patterns) {
+
+    /**
+     *  String...patterns is varargs, takes in a variable number of arguments, like an array,
+     *  but is not statically constructed. patterns effectively becomes an array but works dynamically
+     *
+     */
+
+
+    public boolean peek(String... patterns) { //Lexer
         for (int i = 0; i < patterns.length; i++) {
             if (!chars.has(i) || !String.valueOf(chars.get(i)).matches(patterns[i])) {
                 return false;
