@@ -19,6 +19,8 @@ public final class Lexer {
 
     private final CharStream chars;
 
+    List<Token> tokens = null;
+
     public Lexer(String input) {
         chars = new CharStream(input);
     }
@@ -28,7 +30,8 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
-        throw new UnsupportedOperationException(); //TODO
+        tokens.add(lexToken());
+        return tokens;
     }
 
     /**
@@ -41,7 +44,7 @@ public final class Lexer {
      */
     public Token lexToken() { //TODO
 
-        if (peek("^(@|[A-Za-z])[A-Za-z0-9_-]*$")) {  //Still need to finish regex for Identifier
+        if (peek("^(@|[A-Za-z])[A-Za-z0-9_-]*$")) {
             return lexIdentifier();
         } else if (peek("^(-?[1-9][0-9]*)|0$")) {
             return lexNumber(); // Integer
@@ -53,6 +56,8 @@ public final class Lexer {
             return lexString();
         } else if (peek("^([!=]=)|&&|\\|\\||[^\\b\\n\\r\\t]$")) {
             return lexOperator();
+        } else {
+            throw new ParseException("Not a valid token", 0);
         }
     }
 
