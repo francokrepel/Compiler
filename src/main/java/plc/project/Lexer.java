@@ -19,6 +19,8 @@ public final class Lexer {
 
     private final CharStream chars;
 
+    List<Token> tokens = null;
+
     public Lexer(String input) {
         chars = new CharStream(input);
     }
@@ -28,7 +30,8 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
-        throw new UnsupportedOperationException(); //TODO
+        tokens.add(lexToken());
+        return tokens;
     }
 
     /**
@@ -39,15 +42,8 @@ public final class Lexer {
      * The next character should start a valid token since whitespace is handled
      * by {@link #lex()}
      */
-
-
-    /**
-     * for character and srting first part:
-     * we negate new line and return because we dont want the input to be a literal
-     * new line or return when inputed in java . you cant have these quoted literals.
-     */
     public Token lexToken() { //TODO
-        // remember its top-to-bottom, thats why operator will catch 'any character' not previoulst caught
+
         if (peek("^(@|[A-Za-z])[A-Za-z0-9_-]*$")) {
             return lexIdentifier();
         } else if (peek("^(-?[1-9][0-9]*)|0$")) {
@@ -58,13 +54,11 @@ public final class Lexer {
             return lexCharacter(); // allows space? on regexr.com atleast
         } else if (peek("^\"([^\"\\n\\r\\\\]|\\\\[bnrt'\"\\\\])*\"$")) {
             return lexString();
-//        } else if (peek("^\\\\[bnrt'\"\\\\]$")) {
-//            return lexEscape();
         } else if (peek("^([!=]=)|&&|\\|\\||[^\\b\\n\\r\\t]$")) {
             return lexOperator();
+        } else {
+            throw new ParseException("Not a valid token", 0);
         }
-
-        throw new ParseException("Could not lex Token, failed at index ", chars.index);
     }
 
     public Token lexIdentifier() {
@@ -96,15 +90,7 @@ public final class Lexer {
      * which should be a regex. For example, {@code peek("a", "b", "c")} would
      * return true if the next characters are {@code 'a', 'b', 'c'}.
      */
-
-    /**
-     *  String...patterns is varargs, takes in a variable number of arguments, like an array,
-     *  but is not statically constructed. patterns effectively becomes an array but works dynamically
-     *
-     */
-
-
-    public boolean peek(String... patterns) { //Lexer
+    public boolean peek(String... patterns) {
         for (int i = 0; i < patterns.length; i++) {
             if (!chars.has(i) || !String.valueOf(chars.get(i)).matches(patterns[i])) {
                 return false;
