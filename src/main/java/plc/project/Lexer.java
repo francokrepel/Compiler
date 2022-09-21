@@ -49,10 +49,8 @@ public final class Lexer {
         //changed the regex to remove anything after first char: (...)[A-Za-z0-9_-]*
         if (peek("@|[A-Za-z]")) {
             return lexIdentifier();
-        } else if (peek("(-?[1-9][0-9]*)|0")) {
-            return lexNumber(); // Integer
-        } else if (peek("-?([1-9][0-9]*|0)\\.[0-9]+")) {
-            return lexNumber(); // Decimal
+        } else if (peek("-|[0-9]")) {
+            return lexNumber();
         } else if (peek("'([^'\\n\\r\\\\]|\\\\[bnrt'\"\\\\])'")) {
             return lexCharacter(); // allows space? on regexr.com atleast
         } else if (peek("\"([^\"\\n\\r\\\\]|\\\\[bnrt'\"\\\\])*\"")) {
@@ -66,16 +64,55 @@ public final class Lexer {
 
     public Token lexIdentifier() {
         chars.advance();
-        while(match("[A-Za-z0-9_-]")) {
-            if (peek("[^A-Za-z0-9_-]")) { //checks if next one NOT valid
-                throw new ParseException("Not a valid token", chars.index);
-            }
-        }
+        while(match("[A-Za-z0-9_-]")) {}
         return chars.emit(Token.Type.IDENTIFIER);
     }
 
+    //0. are not handled
     public Token lexNumber() {
-        throw new UnsupportedOperationException(); //TODO
+        if (match("-")) {
+            if (match("0")) {
+                if (match(".", "[0-9]")) {
+                    while (match("[0-9]")) {}
+                    return chars.emit(Token.Type.DECIMAL); //case of -0.00(...) or -0.34(...)
+                }
+                return chars.emit(Token.Type.INTEGER); //single integer 0
+            }
+            if (match("[1-9]")) {
+                if (match("\\.", "[0-9]")) {
+                    while(match("[0-9]")) {}
+                    return chars.emit(Token.Type.DECIMAL); //case of -1.00(...) or -5.34(...)
+                }
+                while (match("[0-9]")) {
+                    if (match("\\.", "[0-9]")) {
+                        while(match("[0-9]")) {}
+                        return chars.emit(Token.Type.DECIMAL); //case of case of -123.00(...) or -5532.34(...)
+                    }
+                }
+                return chars.emit(Token.Type.INTEGER); //integer 1-9 or infinite integger
+            }
+            //function just as "0" case under "-" but doesnt need a negative before it
+        } else if (match("0")) {
+            if (match(".", "[0-9]")) {
+                while (match("[0-9]")) {}
+                return chars.emit(Token.Type.DECIMAL);
+            }
+            return chars.emit(Token.Type.INTEGER);
+            //function just as [1-9] under "-" but doesnt need a negative before it
+        } else if (match("[1-9]")) {
+            if (match("\\.", "[0-9]")) {
+                while(match("[0-9]")) {}
+                return chars.emit(Token.Type.DECIMAL);
+            }
+            while (match("[0-9]")) {
+                if (match("\\.", "[0-9]")) {
+                    while(match("[0-9]")) {}
+                    return chars.emit(Token.Type.DECIMAL);
+                }
+            }
+            return chars.emit(Token.Type.INTEGER);
+        }
+        throw new ParseException("You messed up the number bro at ", chars.index);
     }
 
     public Token lexCharacter() {
