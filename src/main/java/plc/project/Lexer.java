@@ -62,7 +62,6 @@ public final class Lexer {
     }
 
     public Token lexIdentifier() {
-
         if (match("(@|[A-Za-z])") == true) {
             while(match("[A-Za-z0-9_-]*")) {
             }
@@ -96,6 +95,14 @@ public final class Lexer {
      * Returns true if the next sequence of characters match the given patterns,
      * which should be a regex. For example, {@code peek("a", "b", "c")} would
      * return true if the next characters are {@code 'a', 'b', 'c'}.
+     */
+
+    /** patterns.length number of different regex you pass at once as strings.
+     So like if you want to check two characters with the same peek call patterns.length
+     would be 2
+
+     so it first checks with has and the i as offset if you will have the next char
+     then it checks if it actually matches the regex
      */
     public boolean peek(String... patterns) {
         for (int i = 0; i < patterns.length; i++) {
