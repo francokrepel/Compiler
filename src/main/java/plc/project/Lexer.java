@@ -62,12 +62,13 @@ public final class Lexer {
     }
 
     public Token lexIdentifier() {
-        if (match("(@|[A-Za-z])") == true) {
-            while(match("[A-Za-z0-9_-]*")) {
-            }
-        } else {
-            throw new ParseException("Not a valid token", chars.index);
+
+        chars.advance();
+        while(match("[A-Za-z0-9_-]")) {
         }
+//        } else {
+//            throw new ParseException("Not a valid token", chars.index);
+//        }
         return chars.emit(Token.Type.IDENTIFIER);
     } //TODO
 
