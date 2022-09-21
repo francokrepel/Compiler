@@ -168,4 +168,9 @@ public class LexerTests {
         }
     }
 
+    @Test
+    void testPeekMultiCharTrue() {
+        Assertions.assertTrue(new Lexer("0123210a0b1c2").peek("0", "1", "2", "3"));
+    }
+
 }

@@ -57,13 +57,18 @@ public final class Lexer {
         } else if (peek("^([!=]=)|&&|\\|\\||[^\\b\\n\\r\\t]$")) {
             return lexOperator();
         } else {
-            throw new ParseException("Not a valid token", 0);
+            throw new ParseException("Not a valid token", chars.index);
         }
     }
 
     public Token lexIdentifier() {
-        throw new UnsupportedOperationException(); //TODO
-    }
+
+        while(match("(@|[A-Za-z])[A-Za-z0-9_-]*")) {
+
+        }
+
+        return chars.emit(Token.Type.IDENTIFIER);
+    } //TODO
 
     public Token lexNumber() {
         throw new UnsupportedOperationException(); //TODO
