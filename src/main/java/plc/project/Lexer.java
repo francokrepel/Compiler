@@ -63,9 +63,15 @@ public final class Lexer {
 
     public Token lexIdentifier() {
 
-        while(match("(@|[A-Za-z])[A-Za-z0-9_-]*")) {
+        if (match("(@|[A-Za-z])") == true) {
+            while(match("[A-Za-z0-9_-]*")) {
 
+            }
+        } else {
+            throw new ParseException("Not a valid token", chars.index);
         }
+
+
 
         return chars.emit(Token.Type.IDENTIFIER);
     } //TODO
