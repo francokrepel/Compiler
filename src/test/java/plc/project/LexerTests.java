@@ -168,6 +168,18 @@ public class LexerTests {
         }
     }
 
+    @ParameterizedTest
+    @MethodSource
+    void testPeekSingleChar(String test, String source, boolean success, String pattern) {
+        Assertions.assertEquals(success, new Lexer(source).peek(pattern));
+    }
+
+    private static Stream<Arguments> testPeekSingleChar() {
+        return Stream.of(
+                Arguments.of("first char 0", "0123210a0b1c2", true, "0")
+        );
+    }
+
     @Test
     void testPeekMultiCharTrue() {
         Assertions.assertTrue(new Lexer("0123210a0b1c2").peek("[a-z]*[0-9]*"));
