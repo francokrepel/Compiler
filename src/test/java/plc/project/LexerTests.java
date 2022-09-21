@@ -176,7 +176,8 @@ public class LexerTests {
 
     private static Stream<Arguments> testPeekSingleChar() {
         return Stream.of(
-                Arguments.of("first char 0", "0123210a0b1c2", true, "0")
+                Arguments.of("first char 0", "0123210a0b1c2", true, "0"),
+                Arguments.of("first char not 0", "0123210a0b1c2", false, "[A-z1-9]")
         );
     }
 
