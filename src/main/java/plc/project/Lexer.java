@@ -29,8 +29,11 @@ public final class Lexer {
      * Repeatedly lexes the input using {@link #lexToken()}, also skipping over
      * whitespace where appropriate.
      */
-    public List<Token> lex() {
-        tokens.add(lexToken());
+    public List<Token> lex() { //TODO
+        while (chars.has(0)/*this might be wrong*/) {
+            tokens.add(lexToken());
+            //Skip over whitespace
+        }
         return tokens;
     }
 
@@ -44,17 +47,17 @@ public final class Lexer {
      */
     public Token lexToken() { //TODO
 
-        if (peek("^(@|[A-Za-z])[A-Za-z0-9_-]*$")) {
+        if (peek("(@|[A-Za-z])[A-Za-z0-9_-]*")) {
             return lexIdentifier();
-        } else if (peek("^(-?[1-9][0-9]*)|0$")) {
+        } else if (peek("(-?[1-9][0-9]*)|0")) {
             return lexNumber(); // Integer
-        } else if (peek("^-?([1-9][0-9]*|0)\\.[0-9]+$")) {
+        } else if (peek("-?([1-9][0-9]*|0)\\.[0-9]+")) {
             return lexNumber(); // Decimal
-        } else if (peek("^'([^'\\n\\r\\\\]|\\\\[bnrt'\"\\\\])'$")) {
+        } else if (peek("'([^'\\n\\r\\\\]|\\\\[bnrt'\"\\\\])'")) {
             return lexCharacter(); // allows space? on regexr.com atleast
-        } else if (peek("^\"([^\"\\n\\r\\\\]|\\\\[bnrt'\"\\\\])*\"$")) {
+        } else if (peek("\"([^\"\\n\\r\\\\]|\\\\[bnrt'\"\\\\])*\"")) {
             return lexString();
-        } else if (peek("^([!=]=)|&&|\\|\\||[^\\\\b\\\\n\\\\r\\\\t]$")) {
+        } else if (peek("([!=]=)|&&|\\|\\||[^\\n\\r\\t]")) {
             return lexOperator();
         } else {
             throw new ParseException("Not a valid token", chars.index);
@@ -70,7 +73,7 @@ public final class Lexer {
 //            throw new ParseException("Not a valid token", chars.index);
 //        }
         return chars.emit(Token.Type.IDENTIFIER);
-    } //TODO
+    }
 
     public Token lexNumber() {
         throw new UnsupportedOperationException(); //TODO
@@ -147,11 +150,11 @@ public final class Lexer {
         public CharStream(String input) {
             this.input = input;
         }
-        //are there more characters to consider?
+
         public boolean has(int offset) {
             return index + offset < input.length();
         }
-        //returns char at offset pos
+
         public char get(int offset) {
             return input.charAt(index + offset);
         }
