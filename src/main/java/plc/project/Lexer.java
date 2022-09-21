@@ -46,8 +46,8 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() { //TODO
-
-        if (peek("(@|[A-Za-z])[A-Za-z0-9_-]*")) {
+        //changed the regex to remove anything after first char: (...)[A-Za-z0-9_-]*
+        if (peek("@|[A-Za-z]")) {
             return lexIdentifier();
         } else if (peek("(-?[1-9][0-9]*)|0")) {
             return lexNumber(); // Integer
@@ -65,13 +65,12 @@ public final class Lexer {
     }
 
     public Token lexIdentifier() {
-
         chars.advance();
         while(match("[A-Za-z0-9_-]")) {
+            if (peek("[^A-Za-z0-9_-]")) { //checks if next one NOT valid
+                throw new ParseException("Not a valid token", chars.index);
+            }
         }
-//        } else {
-//            throw new ParseException("Not a valid token", chars.index);
-//        }
         return chars.emit(Token.Type.IDENTIFIER);
     }
 
