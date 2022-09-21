@@ -54,7 +54,7 @@ public final class Lexer {
             return lexCharacter(); // allows space? on regexr.com atleast
         } else if (peek("^\"([^\"\\n\\r\\\\]|\\\\[bnrt'\"\\\\])*\"$")) {
             return lexString();
-        } else if (peek("^([!=]=)|&&|\\|\\||[^\\b\\n\\r\\t]$")) {
+        } else if (peek("^([!=]=)|&&|\\|\\||[^\\\\b\\\\n\\\\r\\\\t]$")) {
             return lexOperator();
         } else {
             throw new ParseException("Not a valid token", chars.index);
@@ -65,14 +65,10 @@ public final class Lexer {
 
         if (match("(@|[A-Za-z])") == true) {
             while(match("[A-Za-z0-9_-]*")) {
-
             }
         } else {
             throw new ParseException("Not a valid token", chars.index);
         }
-
-
-
         return chars.emit(Token.Type.IDENTIFIER);
     } //TODO
 
@@ -143,11 +139,11 @@ public final class Lexer {
         public CharStream(String input) {
             this.input = input;
         }
-
+        //are there more characters to consider?
         public boolean has(int offset) {
             return index + offset < input.length();
         }
-
+        //returns char at offset pos
         public char get(int offset) {
             return input.charAt(index + offset);
         }
