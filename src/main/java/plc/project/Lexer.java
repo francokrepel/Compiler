@@ -29,8 +29,11 @@ public final class Lexer {
      * Repeatedly lexes the input using {@link #lexToken()}, also skipping over
      * whitespace where appropriate.
      */
-    public List<Token> lex() {
-        tokens.add(lexToken());
+    public List<Token> lex() { //TODO
+        while (chars.has(0)/*this might be wrong*/) {
+            tokens.add(lexToken());
+            //Skip over whitespace
+        }
         return tokens;
     }
 
@@ -44,17 +47,17 @@ public final class Lexer {
      */
     public Token lexToken() { //TODO
 
-        if (peek("^(@|[A-Za-z])[A-Za-z0-9_-]*$")) {
+        if (peek("(@|[A-Za-z])[A-Za-z0-9_-]*")) {
             return lexIdentifier();
-        } else if (peek("^(-?[1-9][0-9]*)|0$")) {
+        } else if (peek("(-?[1-9][0-9]*)|0")) {
             return lexNumber(); // Integer
-        } else if (peek("^-?([1-9][0-9]*|0)\\.[0-9]+$")) {
+        } else if (peek("-?([1-9][0-9]*|0)\\.[0-9]+")) {
             return lexNumber(); // Decimal
-        } else if (peek("^'([^'\\n\\r\\\\]|\\\\[bnrt'\"\\\\])'$")) {
+        } else if (peek("'([^'\\n\\r\\\\]|\\\\[bnrt'\"\\\\])'")) {
             return lexCharacter(); // allows space? on regexr.com atleast
-        } else if (peek("^\"([^\"\\n\\r\\\\]|\\\\[bnrt'\"\\\\])*\"$")) {
+        } else if (peek("\"([^\"\\n\\r\\\\]|\\\\[bnrt'\"\\\\])*\"")) {
             return lexString();
-        } else if (peek("^([!=]=)|&&|\\|\\||[^\\\\b\\\\n\\\\r\\\\t]$")) {
+        } else if (peek("([!=]=)|&&|\\|\\||[^\\n\\r\\t]")) {
             return lexOperator();
         } else {
             throw new ParseException("Not a valid token", chars.index);
@@ -62,14 +65,14 @@ public final class Lexer {
     }
 
     public Token lexIdentifier() {
-        if (match("(@|[A-Za-z])") == true) {
-            while(match("[A-Za-z0-9_-]*")) {
-            }
+
+        if (match("(@|[A-Za-z])")) {
+            while(match("[A-Za-z0-9_-]*"));
         } else {
             throw new ParseException("Not a valid token", chars.index);
         }
         return chars.emit(Token.Type.IDENTIFIER);
-    } //TODO
+    }
 
     public Token lexNumber() {
         throw new UnsupportedOperationException(); //TODO
@@ -95,14 +98,6 @@ public final class Lexer {
      * Returns true if the next sequence of characters match the given patterns,
      * which should be a regex. For example, {@code peek("a", "b", "c")} would
      * return true if the next characters are {@code 'a', 'b', 'c'}.
-     */
-
-    /** patterns.length number of different regex you pass at once as strings.
-     So like if you want to check two characters with the same peek call patterns.length
-     would be 2
-
-     so it first checks with has and the i as offset if you will have the next char
-     then it checks if it actually matches the regex
      */
     public boolean peek(String... patterns) {
         for (int i = 0; i < patterns.length; i++) {
@@ -146,11 +141,11 @@ public final class Lexer {
         public CharStream(String input) {
             this.input = input;
         }
-        //are there more characters to consider?
+
         public boolean has(int offset) {
             return index + offset < input.length();
         }
-        //returns char at offset pos
+
         public char get(int offset) {
             return input.charAt(index + offset);
         }
