@@ -1,5 +1,6 @@
 package plc.project;
 
+import java.sql.SQLOutput;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -37,6 +38,7 @@ public final class Lexer {
             }
             chars.advance();
             chars.skip();
+            System.out.println("Token: " + tokens.get(tokens.size()-1));
         }
 
         return tokens;
@@ -128,7 +130,7 @@ public final class Lexer {
         if (peek("\\\\")) {
             chars.advance();
             esc = true;
-        } else if (peek("[^'\\n\\r\\\\]")) {
+        } else if (peek("[^'\\n\\r\\t\\\\]")) {
             chars.advance();
             norm = true;
         } else {
@@ -198,24 +200,28 @@ public final class Lexer {
             if (!peek("=")) {
                 return chars.emit(Token.Type.OPERATOR);
             }
+            chars.advance();
             return chars.emit(Token.Type.OPERATOR);
         } else if (peek("=")) {
             chars.advance();
             if (!peek("=")) {
                 return chars.emit(Token.Type.OPERATOR);
             }
+            chars.advance();
             return chars.emit(Token.Type.OPERATOR);
         } else if (peek("[|]")) {
             chars.advance();
             if (!peek("[|]")) {
                 return chars.emit(Token.Type.OPERATOR);
             }
+            chars.advance();
             return chars.emit(Token.Type.OPERATOR);
         }else if (peek("&")) {
             chars.advance();
             if (!peek("&")) {
                 return chars.emit(Token.Type.OPERATOR);
             }
+            chars.advance();
             return chars.emit(Token.Type.OPERATOR);
         } else {
             chars.advance();

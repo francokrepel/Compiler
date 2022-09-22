@@ -79,7 +79,6 @@ public class LexerTests {
                 Arguments.of("Empty", "\'\'", false),
                 Arguments.of("Multiple", "\'abc\'", false),
                 Arguments.of("Unterminated", "\'", false),
-                Arguments.of("New line", "\'\\n\'", false),
                 Arguments.of("No ending single quote", "\'a", false)
         );
     }
@@ -97,7 +96,7 @@ public class LexerTests {
                 Arguments.of("Newline Escape", "\"Hello,\\nWorld\"", true),
                 Arguments.of("Unterminated", "\"unterminated", false),
                 Arguments.of("Symbols", "\"!@#$%^&*()\"", true),
-                Arguments.of("Newline unterminated", "\"unterminated\\n\"", false),
+                Arguments.of("Newline unterminated", "\"unterminated\\n\"", false),  //is this correct or should there not be the ending quote
                 Arguments.of("Invalid Escape", "\"invalid\\escape\"", false)
         );
     }
