@@ -68,7 +68,6 @@ public final class Lexer {
         return chars.emit(Token.Type.IDENTIFIER);
     }
 
-    //0. are not handled
     public Token lexNumber() {
         if (match("-")) {
             if (match("0")) {
