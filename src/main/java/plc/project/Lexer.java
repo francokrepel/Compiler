@@ -29,12 +29,12 @@ public final class Lexer {
      * Repeatedly lexes the input using {@link #lexToken()}, also skipping over
      * whitespace where appropriate.
      */
-    public List<Token> lex() { //TODO
+    public List<Token> lex() {
         while (chars.has(0)/*this might be wrong*/) {
-
             tokens.add(lexToken());
             if (peek("[ \\b\\n\\r\\t]")) {
-                while (match("[ \\b\\n\\r\\t]"));
+                chars.advance();
+                chars.skip();
             }
         }
         return tokens;
@@ -58,13 +58,12 @@ public final class Lexer {
             return lexCharacter();
         } else if (peek("\"")) { //"([^"\n\r\\]|\\[bnrt'"\\])*"
             return lexString();
-        } else if (peek("([!=]=)|&&|\\|\\||[^\\n\\r\\t]")) {
+        } else if (peek("[^\\n\\r\\t]")) {
             return lexOperator();
         } else {
             throw new ParseException("Not a valid token", chars.index);
         }
     }
-
     public Token lexIdentifier() {
         chars.advance();
         while(match("[A-Za-z0-9_-]"));
@@ -179,17 +178,16 @@ public final class Lexer {
     }
 
     public void lexEscape() {
-
-        chars.advance();
-        if (!peek("[bnrt'\"\\\\]")) {
+        if (!peek("\\\\[bnrt'\"\\\\]")) {
             throw new ParseException("Not a valid token", chars.index);
         }
-        //How to return the token here? this function returns void???
-        throw new UnsupportedOperationException(); //TODO
     }
 
     public Token lexOperator() {
-        return chars.emit(Token.Type.OPERATOR);
+        if (match("==") || match("!=") || match("&&") || match("\\|\\|")) {
+            return chars.emit(Token.Type.OPERATOR);
+        }
+        throw new ParseException("Not a valid token", chars.index);
     }
 
     /**
