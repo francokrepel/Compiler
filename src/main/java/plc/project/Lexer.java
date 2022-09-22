@@ -32,7 +32,9 @@ public final class Lexer {
     public List<Token> lex() { //TODO
         while (chars.has(0)/*this might be wrong*/) {
             tokens.add(lexToken());
-            //Skip over whitespace
+            if (peek("[ \\b\\n\\r\\t]")) {
+                while (match("[ \\b\\n\\r\\t]"));
+            }
         }
         return tokens;
     }
@@ -52,9 +54,12 @@ public final class Lexer {
         } else if (peek("-|[0-9]")) {
             return lexNumber();
         } else if (peek("'")) { //'([^'\n\r\\]|\\[bnrt'"\\])'
-            return lexCharacter(); // allows space? on regexr.com atleast
-        } else if (peek("\"([^\"\\n\\r\\\\]|\\\\[bnrt'\"\\\\])*\"")) {
+            return lexCharacter();
+        } else if (peek("\"")) { //"([^"\n\r\\]|\\[bnrt'"\\])*"
             return lexString();
+//        } else if (peek("\\")) {
+//           lexEscape();
+
         } else if (peek("([!=]=)|&&|\\|\\||[^\\n\\r\\t]")) {
             return lexOperator();
         } else {
@@ -64,7 +69,7 @@ public final class Lexer {
 
     public Token lexIdentifier() {
         chars.advance();
-        while(match("[A-Za-z0-9_-]")) {}
+        while(match("[A-Za-z0-9_-]"));
         return chars.emit(Token.Type.IDENTIFIER);
     }
 
@@ -155,10 +160,28 @@ public final class Lexer {
     }
 
     public Token lexString() {
-        throw new UnsupportedOperationException(); //TODO
+        chars.advance();
+        while (peek("([^\"\\n\\r\\\\] | \\\\)*")) {
+            chars.advance();
+        }
+
+        if (peek("\"")) {
+            chars.advance();
+        } else {
+            throw new ParseException("Not a valid token", chars.index);
+        }
+
+
+        return chars.emit(Token.Type.STRING); //TODO
     }
 
     public void lexEscape() {
+
+        chars.advance();
+        if (!peek("[bnrt'\"\\\\]")) {
+            throw new ParseException("Not a valid token", chars.index);
+        }
+        //How to return the token here? this function returns void???
         throw new UnsupportedOperationException(); //TODO
     }
 
