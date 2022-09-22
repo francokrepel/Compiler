@@ -30,12 +30,12 @@ public final class Lexer {
      * Repeatedly lexes the input using {@link #lexToken()}, also skipping over
      * whitespace where appropriate.
      */
-    public List<Token> lex() { //TODO
-        tokens.add(lexToken());
+    public List<Token> lex() {
         while (chars.has(0)/*this might be wrong*/) {
             tokens.add(lexToken());
             if (peek("[ \\b\\n\\r\\t]")) {
-                while (match("[ \\b\\n\\r\\t]"));
+                chars.advance();
+                chars.skip();
             }
         }
         return tokens;
