@@ -31,6 +31,7 @@ public final class Lexer {
      */
     public List<Token> lex() { //TODO
         while (chars.has(0)/*this might be wrong*/) {
+
             tokens.add(lexToken());
             if (peek("[ \\b\\n\\r\\t]")) {
                 while (match("[ \\b\\n\\r\\t]"));
@@ -51,15 +52,12 @@ public final class Lexer {
         //changed the regex to remove anything after first char: (...)[A-Za-z0-9_-]*
         if (peek("@|[A-Za-z]")) {
             return lexIdentifier();
-        } else if (peek("-|.|[0-9]")) {
+        } else if (peek("-|[0-9]")) {
             return lexNumber();
         } else if (peek("'")) { //'([^'\n\r\\]|\\[bnrt'"\\])'
             return lexCharacter();
         } else if (peek("\"")) { //"([^"\n\r\\]|\\[bnrt'"\\])*"
             return lexString();
-//        } else if (peek("\\")) {
-//           lexEscape();
-
         } else if (peek("([!=]=)|&&|\\|\\||[^\\n\\r\\t]")) {
             return lexOperator();
         } else {
