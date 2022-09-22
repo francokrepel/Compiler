@@ -161,7 +161,13 @@ public final class Lexer {
 
     public Token lexString() {
         chars.advance();
-        while (peek("([^\"\\n\\r\\\\] | \\\\)*")) {
+        while (peek("([^\"\\n\\r\\\\]|\\\\)*")) {
+            if (peek("\\\\")) {
+                chars.advance();
+                if (!peek("[bnrt'\"\\\\]")) {
+                    throw new ParseException("Not a valid token", chars.index);
+                }
+            }
             chars.advance();
         }
 
@@ -171,8 +177,7 @@ public final class Lexer {
             throw new ParseException("Not a valid token", chars.index);
         }
 
-
-        return chars.emit(Token.Type.STRING); //TODO
+        return chars.emit(Token.Type.STRING);
     }
 
     public void lexEscape() {
