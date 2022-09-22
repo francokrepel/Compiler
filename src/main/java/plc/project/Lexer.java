@@ -53,8 +53,8 @@ public final class Lexer {
             return lexNumber(); // Integer
         } else if (peek("-?([1-9][0-9]*|0)\\.[0-9]+")) {
             return lexNumber(); // Decimal
-        } else if (peek("'([^'\\n\\r\\\\]|\\\\[bnrt'\"\\\\])'")) {
-            return lexCharacter(); // allows space? on regexr.com atleast
+        } else if (peek("'")) { //'([^'\n\r\\]|\\[bnrt'"\\])'
+            return lexCharacter();
         } else if (peek("\"([^\"\\n\\r\\\\]|\\\\[bnrt'\"\\\\])*\"")) {
             return lexString();
         } else if (peek("([!=]=)|&&|\\|\\||[^\\n\\r\\t]")) {
@@ -67,8 +67,7 @@ public final class Lexer {
     public Token lexIdentifier() {
 
         chars.advance();
-        while(match("[A-Za-z0-9_-]")) {
-        }
+        while(match("[A-Za-z0-9_-]"));
 //        } else {
 //            throw new ParseException("Not a valid token", chars.index);
 //        }
@@ -80,7 +79,43 @@ public final class Lexer {
     }
 
     public Token lexCharacter() {
-        throw new UnsupportedOperationException(); //TODO
+        boolean esc = false;
+        boolean norm = false;
+
+        chars.advance();
+        if (peek("\\\\")) { //This if block checks to see if the next character after the initial ' is a normal character or an escape \
+            chars.advance();
+            esc = true;
+        } else if (peek("[^'\\n\\r\\\\]")) {
+            chars.advance();
+            norm = true;
+        } else {
+            throw new ParseException("Not a valid token", chars.index);
+        }
+
+        if (esc) {  //if the previous character was an escape, this checks for another character
+            if (peek("[bnrt'\"\\\\]")) {
+                chars.advance();
+            } else {
+                throw new ParseException("Not a valid token", chars.index);
+            }
+            if (!peek("'")) {
+                throw new ParseException("Not a valid token", chars.index);
+            } else {
+                chars.advance();
+            }
+
+        } else if (norm) {  //if the previous character was not an escape
+            if (!peek("'")) {
+                throw new ParseException("Not a valid token", chars.index);
+            } else {
+                chars.advance();
+            }
+        } else {
+            throw new ParseException("Not a valid token", chars.index);
+        }
+
+        return chars.emit(Token.Type.CHARACTER);
     }
 
     public Token lexString() {
