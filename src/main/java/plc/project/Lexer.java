@@ -1,6 +1,7 @@
 package plc.project;
 
 import java.util.List;
+import java.util.ArrayList;
 
 
 /**
@@ -19,7 +20,7 @@ public final class Lexer {
 
     private final CharStream chars;
 
-    List<Token> tokens = null;
+    List<Token> tokens = new ArrayList<Token>();
 
     public Lexer(String input) {
         chars = new CharStream(input);
@@ -30,6 +31,7 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() { //TODO
+        tokens.add(lexToken());
         while (chars.has(0)/*this might be wrong*/) {
             tokens.add(lexToken());
             if (peek("[ \\b\\n\\r\\t]")) {
@@ -57,10 +59,7 @@ public final class Lexer {
             return lexCharacter();
         } else if (peek("\"")) { //"([^"\n\r\\]|\\[bnrt'"\\])*"
             return lexString();
-//        } else if (peek("\\")) {
-//           lexEscape();
-
-        } else if (peek("([!=]=)|&&|\\|\\||[^\\n\\r\\t]")) {
+        } else if (peek("[!=]|&|[|]|any character")) { //== != && ||     [!=]=?|&&|(||)|any character
             return lexOperator();
         } else {
             throw new ParseException("Not a valid token", chars.index);
@@ -192,7 +191,35 @@ public final class Lexer {
     }
 
     public Token lexOperator() {
-        throw new UnsupportedOperationException(); //TODO
+
+        if (peek("!")) {
+            chars.advance();
+            if (!peek("=")) {
+                return chars.emit(Token.Type.OPERATOR);
+            }
+            return chars.emit(Token.Type.OPERATOR);
+        } else if (peek("=")) {
+            chars.advance();
+            if (!peek("=")) {
+                return chars.emit(Token.Type.OPERATOR);
+            }
+            return chars.emit(Token.Type.OPERATOR);
+        } else if (peek("[|]")) {
+            chars.advance();
+            if (!peek("[|]")) {
+                return chars.emit(Token.Type.OPERATOR);
+            }
+            return chars.emit(Token.Type.OPERATOR);
+        }else if (peek("&")) {
+            chars.advance();
+            if (!peek("&")) {
+                return chars.emit(Token.Type.OPERATOR);
+            }
+            return chars.emit(Token.Type.OPERATOR);
+        } else {
+            chars.advance();
+            return chars.emit(Token.Type.OPERATOR);
+        }
     }
 
     /**
