@@ -51,7 +51,7 @@ public final class Lexer {
         //changed the regex to remove anything after first char: (...)[A-Za-z0-9_-]*
         if (peek("@|[A-Za-z]")) {
             return lexIdentifier();
-        } else if (peek("-|[0-9]")) {
+        } else if (peek("-|.|[0-9]")) {
             return lexNumber();
         } else if (peek("'")) { //'([^'\n\r\\]|\\[bnrt'"\\])'
             return lexCharacter();
@@ -186,7 +186,7 @@ public final class Lexer {
     }
 
     public Token lexOperator() {
-        throw new UnsupportedOperationException(); //TODO
+        return chars.emit(Token.Type.OPERATOR);
     }
 
     /**
