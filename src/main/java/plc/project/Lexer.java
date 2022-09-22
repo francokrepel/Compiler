@@ -51,7 +51,7 @@ public final class Lexer {
             return lexIdentifier();
         } else if (peek("-|[0-9]")) {
             return lexNumber();
-        } else if (peek("'([^'\\n\\r\\\\]|\\\\[bnrt'\"\\\\])'")) {
+        } else if (peek("'")) { //'([^'\n\r\\]|\\[bnrt'"\\])'
             return lexCharacter(); // allows space? on regexr.com atleast
         } else if (peek("\"([^\"\\n\\r\\\\]|\\\\[bnrt'\"\\\\])*\"")) {
             return lexString();
@@ -116,7 +116,43 @@ public final class Lexer {
     }
 
     public Token lexCharacter() {
-        throw new UnsupportedOperationException(); //TODO
+        boolean esc = false;
+        boolean norm = false;
+
+        chars.advance();
+        if (peek("\\\\")) {
+            chars.advance();
+            esc = true;
+        } else if (peek("[^'\\n\\r\\\\]")) {
+            chars.advance();
+            norm = true;
+        } else {
+            throw new ParseException("Not a valid token", chars.index);
+        }
+
+        if (esc) {
+            if (peek("[bnrt'\"\\\\]")) {
+                chars.advance();
+            } else {
+                throw new ParseException("Not a valid token", chars.index);
+            }
+            if (!peek("'")) {
+                throw new ParseException("Not a valid token", chars.index);
+            } else {
+                chars.advance();
+            }
+
+        } else if (norm) {
+            if (!peek("'")) {
+                throw new ParseException("Not a valid token", chars.index);
+            } else {
+                chars.advance();
+            }
+        } else {
+            throw new ParseException("Not a valid token", chars.index);
+        }
+
+        return chars.emit(Token.Type.CHARACTER);
     }
 
     public Token lexString() {
