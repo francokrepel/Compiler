@@ -107,9 +107,10 @@ public final class Lexer {
             }
             return chars.emit(Token.Type.INTEGER);
             //function just as [1-9] under "-" but doesnt need a negative before it
+        // FIX FUNCTIONALITY, MIGHT NOT WORK WITH 1.987 (odd numbers)
         } else if (match("[1-9]")) {
             if (match("\\.", "[0-9]")) {
-                while(match("[0-9]")) {}
+                while(match("[0-9]?", "[1-9]")) {}
                 return chars.emit(Token.Type.DECIMAL);
             }
             while (match("[0-9]")) {
@@ -165,8 +166,6 @@ public final class Lexer {
 
     public Token lexString() {
         chars.advance();
-        System.out.println("Hello,\n");
-
         while (peek("([^\"\n\r\\\\]|\\\\)*")) {
             if (peek("\\\\")) {
                 chars.advance();
