@@ -96,7 +96,7 @@ public class LexerTests {
                 Arguments.of("Newline Escape", "\"Hello,\\nWorld\"", true),
                 Arguments.of("Unterminated", "\"unterminated", false),
                 Arguments.of("Symbols", "\"!@#$%^&*()\"", true),
-                Arguments.of("Newline unterminated", "\"unterminated\\n\"", false),  //is this correct or should there not be the ending quote
+                Arguments.of("Newline unterminated", "\"unterminated\n\"", false),  //is this correct or should there not be the ending quote
                 Arguments.of("Invalid Escape", "\"invalid\\escape\"", false)
         );
     }
@@ -116,7 +116,7 @@ public class LexerTests {
                 Arguments.of("Comparison", "||", true),
                 Arguments.of("Comparison", "&&", true),
                 Arguments.of("Space", " ", false),
-                Arguments.of("Symbol", "$", false),
+                Arguments.of("Symbol", "$", true),
                 Arguments.of("Plus sign", "+", true),
                 Arguments.of("Tab", "\t", false)
         );

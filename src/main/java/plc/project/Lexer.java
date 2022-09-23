@@ -33,12 +33,14 @@ public final class Lexer {
      */
     public List<Token> lex() {
         while (chars.has(0)) {
-            while (!peek("[ \\n\\r\\t]")) {
-                tokens.add(lexToken());
-            }
-            chars.advance();
-            chars.skip();
-            System.out.println("Token: " + tokens.get(tokens.size()-1));
+           if (!peek("[ \b\n\r\t]")) {
+                Token t = lexToken();
+                tokens.add(t);
+            } else {
+               chars.advance();
+               chars.skip();
+
+           }
         }
 
         return tokens;
@@ -62,10 +64,8 @@ public final class Lexer {
             return lexCharacter();
         } else if (peek("\"")) { //"([^"\n\r\\]|\\[bnrt'"\\])*"
             return lexString();
-        } else if (peek("[!=]|&|[|]|any character")) { //== != && ||     [!=]=?|&&|(||)|any character
-            return lexOperator();
-        } else {
-            throw new ParseException("Not a valid token", chars.index);
+        } else //(peek("[!=]|&|[|]|.")) { //== != && ||     [!=]=?|&&|(||)|any character
+        { return lexOperator();
         }
     }
 
@@ -164,7 +164,9 @@ public final class Lexer {
 
     public Token lexString() {
         chars.advance();
-        while (peek("([^\"\\n\\r\\\\]|\\\\)*")) {
+        System.out.println("Hello,\n");
+
+        while (peek("([^\"\n\r\\\\]|\\\\)*")) {
             if (peek("\\\\")) {
                 chars.advance();
                 if (!peek("[bnrt'\"\\\\]")) {
@@ -195,38 +197,56 @@ public final class Lexer {
 
     public Token lexOperator() {
 
-        if (peek("!")) {
+
+        if (peek("=", "=") || peek("!", "=") || peek("&", "&") || peek("\\|", "\\|")) {
+
+//            if (peek("=", "&")) {
+//
+//            }
             chars.advance();
-            if (!peek("=")) {
-                return chars.emit(Token.Type.OPERATOR);
-            }
             chars.advance();
-            return chars.emit(Token.Type.OPERATOR);
-        } else if (peek("=")) {
-            chars.advance();
-            if (!peek("=")) {
-                return chars.emit(Token.Type.OPERATOR);
-            }
-            chars.advance();
-            return chars.emit(Token.Type.OPERATOR);
-        } else if (peek("[|]")) {
-            chars.advance();
-            if (!peek("[|]")) {
-                return chars.emit(Token.Type.OPERATOR);
-            }
-            chars.advance();
-            return chars.emit(Token.Type.OPERATOR);
-        }else if (peek("&")) {
-            chars.advance();
-            if (!peek("&")) {
-                return chars.emit(Token.Type.OPERATOR);
-            }
-            chars.advance();
-            return chars.emit(Token.Type.OPERATOR);
         } else {
             chars.advance();
-            return chars.emit(Token.Type.OPERATOR);
         }
+
+        return chars.emit(Token.Type.OPERATOR);
+
+
+
+
+
+//        if (peek("!")) {
+//            chars.advance();
+//            if (!peek("=")) {
+//                return chars.emit(Token.Type.OPERATOR);
+//            }
+//            chars.advance();
+//            return chars.emit(Token.Type.OPERATOR);
+//        } else if (peek("=")) {
+//            chars.advance();
+//            if (!peek("=")) {
+//                return chars.emit(Token.Type.OPERATOR);
+//            }
+//            chars.advance();
+//            return chars.emit(Token.Type.OPERATOR);
+//        } else if (peek("[|]")) {
+//            chars.advance();
+//            if (!peek("[|]")) {
+//                return chars.emit(Token.Type.OPERATOR);
+//            }
+//            chars.advance();
+//            return chars.emit(Token.Type.OPERATOR);
+//        }else if (peek("&")) {
+//            chars.advance();
+//            if (!peek("&")) {
+//                return chars.emit(Token.Type.OPERATOR);
+//            }
+//            chars.advance();
+//            return chars.emit(Token.Type.OPERATOR);
+//        } else {
+//            chars.advance();
+//            return chars.emit(Token.Type.OPERATOR);
+//        }
     }
 
     /**
