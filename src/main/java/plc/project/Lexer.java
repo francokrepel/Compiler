@@ -54,7 +54,7 @@ public final class Lexer {
      * The next character should start a valid token since whitespace is handled
      * by {@link #lex()}
      */
-    public Token lexToken() { //TODO
+    public Token lexToken() {
         //changed the regex to remove anything after first char: (...)[A-Za-z0-9_-]*
         if (peek("@|[A-Za-z]")) {
             return lexIdentifier();
@@ -64,8 +64,9 @@ public final class Lexer {
             return lexCharacter();
         } else if (peek("\"")) { //"([^"\n\r\\]|\\[bnrt'"\\])*"
             return lexString();
-        } else //(peek("[!=]|&|[|]|.")) { //== != && ||     [!=]=?|&&|(||)|any character
-        { return lexOperator();
+        } else {
+            //(peek("[!=]|&|[|]|.")) { //== != && ||     [!=]=?|&&|(||)|any character
+            return lexOperator();
         }
     }
 
@@ -199,10 +200,6 @@ public final class Lexer {
 
 
         if (peek("=", "=") || peek("!", "=") || peek("&", "&") || peek("\\|", "\\|")) {
-
-//            if (peek("=", "&")) {
-//
-//            }
             chars.advance();
             chars.advance();
         } else {
