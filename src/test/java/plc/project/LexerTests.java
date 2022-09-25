@@ -60,7 +60,7 @@ public class LexerTests {
                 Arguments.of("Negative Decimal", "-1.0", true),
                 Arguments.of("Trailing Decimal", "1.", false),
                 Arguments.of("Single digit", "1", false),
-                Arguments.of("Trailing zeros", "7.000", false),
+                Arguments.of("Trailing zeros", "7.000", true),
                 Arguments.of("Double decimal", "1..0", false),
                 Arguments.of("Leading Decimal", ".5", false)
         );

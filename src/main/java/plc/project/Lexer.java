@@ -39,10 +39,8 @@ public final class Lexer {
             } else {
                chars.advance();
                chars.skip();
-
            }
         }
-
         return tokens;
     }
 
@@ -60,12 +58,11 @@ public final class Lexer {
             return lexIdentifier();
         } else if (peek("-|[0-9]")) {
             return lexNumber();
-        } else if (peek("'")) { //'([^'\n\r\\]|\\[bnrt'"\\])'
+        } else if (peek("'")) {
             return lexCharacter();
-        } else if (peek("\"")) { //"([^"\n\r\\]|\\[bnrt'"\\])*"
+        } else if (peek("\"")) {
             return lexString();
         } else {
-            //(peek("[!=]|&|[|]|.")) { //== != && ||     [!=]=?|&&|(||)|any character
             return lexOperator();
         }
     }
@@ -110,7 +107,7 @@ public final class Lexer {
         // FIX FUNCTIONALITY, MIGHT NOT WORK WITH 1.987 (odd numbers)
         } else if (match("[1-9]")) {
             if (match("\\.", "[0-9]")) {
-                while(match("[0-9]?", "[1-9]")) {}
+                while(match("[0-9]")) {}
                 return chars.emit(Token.Type.DECIMAL);
             }
             while (match("[0-9]")) {
@@ -191,25 +188,17 @@ public final class Lexer {
         if (!peek("[bnrt'\"\\\\]")) {
             throw new ParseException("Not a valid token", chars.index);
         }
-        //How to return the token here? this function returns void???
-        throw new UnsupportedOperationException(); //TODO
+        throw new UnsupportedOperationException();
     }
 
     public Token lexOperator() {
-
-
         if (peek("=", "=") || peek("!", "=") || peek("&", "&") || peek("\\|", "\\|")) {
             chars.advance();
             chars.advance();
         } else {
             chars.advance();
         }
-
         return chars.emit(Token.Type.OPERATOR);
-
-
-
-
 
 //        if (peek("!")) {
 //            chars.advance();
