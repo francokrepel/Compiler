@@ -214,7 +214,7 @@ public final class Parser {
                     return false;
                 }
             } else if (patterns[i] instanceof String) {
-                if (!patterns.equals(tokens.get(i).getLiteral())) {
+                if (!patterns[i].equals(tokens.get(i).getLiteral())) {
                     return false;
                 }
             } else {
