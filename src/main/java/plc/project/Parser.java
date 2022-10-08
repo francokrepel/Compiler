@@ -86,8 +86,19 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Statement parseStatement() throws ParseException {
+        // expression ('=' expression)? ';'
+        Ast.Expression lhs = parseExpression();
+        if (match("=")) {
+            Ast.Expression rhs = parseExpression();
+            if (match(";")) {
+                return new Ast.Statement.Assignment(lhs, rhs);
+            }
+        }
+        if (match(";")) {
+            return new Ast.Statement.Expression(lhs);
+        }
 
-        throw new UnsupportedOperationException(); //TODO
+        throw new ParseException("parseStatement", tokens.get(-1).getIndex()); //TODO
     }
 
     /**
@@ -213,18 +224,18 @@ public final class Parser {
         } else if (match("FALSE")) {
             return new Ast.Expression.Literal(false);
         } else if (match(Token.Type.INTEGER)) {
-            return new Ast.Expression.Literal(new BigInteger(tokens.get(0).getLiteral()));
+            return new Ast.Expression.Literal(new BigInteger(tokens.get(-1).getLiteral()));
         } else if (match(Token.Type.DECIMAL)) {
-            return new Ast.Expression.Literal(new BigDecimal(tokens.get(0).getLiteral()));
+            return new Ast.Expression.Literal(new BigDecimal(tokens.get(-1).getLiteral()));
         } else if (match(Token.Type.CHARACTER)) {
-            String c = tokens.get(0).getLiteral().substring(1,tokens.get(0).getLiteral().length() - 1);
+            String c = tokens.get(-1).getLiteral().substring(1,tokens.get(-1).getLiteral().length() - 1);
             //escape, if statement might not be needed
             if (c.length() != 1) {
                 c = replaceEscape(c);
             }
             return new Ast.Expression.Literal(c.charAt(0));
         } else if (match(Token.Type.STRING)) {
-            String s = tokens.get(0).getLiteral().substring(1,tokens.get(0).getLiteral().length() - 1);
+            String s = tokens.get(-1).getLiteral().substring(1,tokens.get(-1).getLiteral().length() - 1);
             s = replaceEscape(s);
             return new Ast.Expression.Literal(s);
         } else if (match("(")) { //group
@@ -233,7 +244,7 @@ public final class Parser {
                 return new Ast.Expression.Group(group);
             }
         } else if (match(Token.Type.IDENTIFIER)) {
-            String identifier = tokens.get(0).getLiteral();
+            String identifier = tokens.get(-1).getLiteral();
             //function
             if (match("(")) {
                 if (match(")")) {
@@ -255,10 +266,10 @@ public final class Parser {
 //                    return new Ast.Expression.Access(expression, )
                 }
             } else { // only identifier ?
-                return new Ast.Expression.Access(Optional.empty(), tokens.get(0).getLiteral());
+                return new Ast.Expression.Access(Optional.empty(), tokens.get(-1).getLiteral());
             }
         }
-        throw new ParseException("Invalid primary expression at: ", tokens.get(0).getIndex());
+        throw new ParseException("Invalid primary expression at: ", tokens.get(-1).getIndex());
     }
 
     /**
