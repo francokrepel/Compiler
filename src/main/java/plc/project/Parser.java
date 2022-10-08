@@ -239,24 +239,29 @@ public final class Parser {
             s = replaceEscape(s);
             return new Ast.Expression.Literal(s);
         } else if (match("(")) { //group
-            Ast.Expression.Group group = new Ast.Expression.Group(parseExpression()); //recursively parse individual expressions in group
+            Ast.Expression expression = parseExpression(); //recursively parse individual expressions in group
             if (match(")")) {
-                return new Ast.Expression.Group(group);
+                return new Ast.Expression.Group(expression);
             }
         } else if (match(Token.Type.IDENTIFIER)) {
             String identifier = tokens.get(-1).getLiteral();
             //function
             if (match("(")) {
+                //identifier()
                 if (match(")")) {
                     return new Ast.Expression.Function(identifier, Collections.emptyList());
                 }
                 ArrayList<Ast.Expression> arguments = new ArrayList<>();
                 arguments.add(parseExpression());
+                //identifier('one expression')
+                if (match(")")) {
+                    return new Ast.Expression.Function(identifier, arguments);
+                }
                 while (match(",")) { //(',' expression)*)?
 //                  if (peek(")")) { throw new ParseException("Trailing Comma",tokens.get(0).getIndex()); } //dont know if these are ncessary...
                     arguments.add(parseExpression());
                     if (match(")")) {
-                        return new Ast.Expression.Function(identifier, arguments); //MIGHT NOT WORK W EMPTY LIST I.E IDENITIFER()
+                        return new Ast.Expression.Function(identifier, arguments);
                     }
                 }
 //                if (!match(")")) { throw new ParseException("Expected Closing parentheses",tokens.get(0).getIndex()); }
