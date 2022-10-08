@@ -143,10 +143,14 @@ public class LexerTests {
                         new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
                         new Token(Token.Type.OPERATOR, ")", 21),
                         new Token(Token.Type.OPERATOR, ";", 22)
+                )),
+                Arguments.of("1.2.3", "1.2.3", Arrays.asList(
+                        new Token(Token.Type.DECIMAL, "1.2", 0),
+                        new Token(Token.Type.OPERATOR, ".", 3),
+                        new Token(Token.Type.INTEGER, "3", 4)
                 ))
         );
     }
-
     @Test
     void testException() {
         ParseException exception = Assertions.assertThrows(ParseException.class,
