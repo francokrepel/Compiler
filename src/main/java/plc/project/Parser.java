@@ -2,9 +2,7 @@ package plc.project;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -88,6 +86,7 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Statement parseStatement() throws ParseException {
+
         throw new UnsupportedOperationException(); //TODO
     }
 
@@ -219,7 +218,7 @@ public final class Parser {
             return new Ast.Expression.Literal(new BigDecimal(tokens.get(0).getLiteral()));
         } else if (match(Token.Type.CHARACTER)) {
             String c = tokens.get(0).getLiteral().substring(1,tokens.get(0).getLiteral().length() - 1);
-            //escape
+            //escape, if statement might not be needed
             if (c.length() != 1) {
                 c = replaceEscape(c);
             }
@@ -234,13 +233,31 @@ public final class Parser {
                 return new Ast.Expression.Group(group);
             }
         } else if (match(Token.Type.IDENTIFIER)) {
+            String identifier = tokens.get(0).getLiteral();
             //function
             if (match("(")) {
-            //access
+                if (match(")")) {
+                    return new Ast.Expression.Function(identifier, Collections.emptyList());
+                }
+                ArrayList<Ast.Expression> arguments = new ArrayList<>();
+                arguments.add(parseExpression());
+                while (match(",")) { //(',' expression)*)?
+//                  if (peek(")")) { throw new ParseException("Trailing Comma",tokens.get(0).getIndex()); } //dont know if these are ncessary...
+                    arguments.add(parseExpression());
+                    if (match(")")) {
+                        return new Ast.Expression.Function(identifier, arguments); //MIGHT NOT WORK W EMPTY LIST I.E IDENITIFER()
+                    }
+                }
+//                if (!match(")")) { throw new ParseException("Expected Closing parentheses",tokens.get(0).getIndex()); }
             } else if (match("[")) {
+                Ast.Expression expression = parseExpression();
+                if (match("]")) {
+//                    return new Ast.Expression.Access(expression, )
+                }
+            } else { // only identifier ?
+                return new Ast.Expression.Access(Optional.empty(), tokens.get(0).getLiteral());
             }
         }
-
         throw new ParseException("Invalid primary expression at: ", tokens.get(0).getIndex());
     }
 
