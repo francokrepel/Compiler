@@ -1,6 +1,8 @@
 package plc.project;
 
-import java.util.List;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.*;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -39,7 +41,7 @@ public final class Parser {
     }
 
     /**
-     * Parses the {@code list} rule. This method should only be called if the
+     * Parses the {@code list} rule. This method    should only be called if the
      * next token declares a list, aka {@code LIST}.
      */
     public Ast.Global parseList() throws ParseException {
@@ -84,7 +86,19 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Statement parseStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        // expression ('=' expression)? ';'
+        Ast.Expression lhs = parseExpression();
+        if (match("=")) {
+            Ast.Expression rhs = parseExpression();
+            if (match(";")) {
+                return new Ast.Statement.Assignment(lhs, rhs);
+            }
+        }
+        if (match(";")) {
+            return new Ast.Statement.Expression(lhs);
+        }
+
+        throw new ParseException("parseStatement", tokens.get(-1).getIndex()); //TODO
     }
 
     /**
@@ -145,8 +159,10 @@ public final class Parser {
      * Parses the {@code expression} rule.
      */
     public Ast.Expression parseExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+//        throw new UnsupportedOperationException(); //TODO
+        return parsePrimaryExpression();
     }
+
 
     /**
      * Parses the {@code logical-expression} rule.
@@ -182,16 +198,83 @@ public final class Parser {
      * functions. It may be helpful to break these up into other methods but is
      * not strictly necessary.
      */
-    public Ast.Expression parsePrimaryExpression() throws ParseException {
-        // throw new UnsupportedOperationException(); //TODO
 
-        if (match("TRUE")) {
-            return new Ast.Expression.Literal(true);
-        } else {
-            throw new ParseException("Invalid primary expression", -1);
-            // TODO: Handle actual character index instead of -1
+    //helper Method
+    private String replaceEscape(String s) {
+        Map<String, String> escapeMap = new HashMap<String, String>();
+        escapeMap.put("\\b", "\b");
+        escapeMap.put("\\n", "\n");
+        escapeMap.put("\\r", "\r");
+        escapeMap.put("\\t", "\t");
+        escapeMap.put("\\\"", "\"");
+        escapeMap.put("\\\\", "\\");
+        escapeMap.put("\\\'", "\'");
+
+        for (Map.Entry<String, String> iter : escapeMap.entrySet()) {
+            s = s.replace(iter.getKey(), iter.getValue());
         }
-
+        return s;
+    }
+    public Ast.Expression parsePrimaryExpression() throws ParseException {
+        //Literal
+        if (match("NIL")) {
+            return new Ast.Expression.Literal(null); // double check
+        } else if (match("TRUE")) {
+            return new Ast.Expression.Literal(true);
+        } else if (match("FALSE")) {
+            return new Ast.Expression.Literal(false);
+        } else if (match(Token.Type.INTEGER)) {
+            return new Ast.Expression.Literal(new BigInteger(tokens.get(-1).getLiteral()));
+        } else if (match(Token.Type.DECIMAL)) {
+            return new Ast.Expression.Literal(new BigDecimal(tokens.get(-1).getLiteral()));
+        } else if (match(Token.Type.CHARACTER)) {
+            String c = tokens.get(-1).getLiteral().substring(1,tokens.get(-1).getLiteral().length() - 1);
+            //escape, if statement might not be needed
+            if (c.length() != 1) {
+                c = replaceEscape(c);
+            }
+            return new Ast.Expression.Literal(c.charAt(0));
+        } else if (match(Token.Type.STRING)) {
+            String s = tokens.get(-1).getLiteral().substring(1,tokens.get(-1).getLiteral().length() - 1);
+            s = replaceEscape(s);
+            return new Ast.Expression.Literal(s);
+        } else if (match("(")) { //group
+            Ast.Expression expression = parseExpression(); //recursively parse individual expressions in group
+            if (match(")")) {
+                return new Ast.Expression.Group(expression);
+            }
+        } else if (match(Token.Type.IDENTIFIER)) {
+            String identifier = tokens.get(-1).getLiteral();
+            //function
+            if (match("(")) {
+                //identifier()
+                if (match(")")) {
+                    return new Ast.Expression.Function(identifier, Collections.emptyList());
+                }
+                ArrayList<Ast.Expression> arguments = new ArrayList<>();
+                arguments.add(parseExpression());
+                //identifier('one expression')
+                if (match(")")) {
+                    return new Ast.Expression.Function(identifier, arguments);
+                }
+                while (match(",")) { //(',' expression)*)?
+//                  if (peek(")")) { throw new ParseException("Trailing Comma",tokens.get(0).getIndex()); } //dont know if these are ncessary...
+                    arguments.add(parseExpression());
+                    if (match(")")) {
+                        return new Ast.Expression.Function(identifier, arguments);
+                    }
+                }
+//                if (!match(")")) { throw new ParseException("Expected Closing parentheses",tokens.get(0).getIndex()); }
+            } else if (match("[")) {
+                Ast.Expression expression = parseExpression();
+                if (match("]")) {
+//                    return new Ast.Expression.Access(expression);
+                }
+            } else { // only identifier ?
+                return new Ast.Expression.Access(Optional.empty(), tokens.get(-1).getLiteral());
+            }
+        }
+        throw new ParseException("Invalid primary expression at: ", tokens.get(-1).getIndex());
     }
 
     /**
