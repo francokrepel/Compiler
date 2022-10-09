@@ -218,7 +218,7 @@ public final class Parser {
                     return false;
                 }
             } else {
-                throw new AssertionError("Invalid pattern object" + patterns[i].getClass());
+                throw new AssertionError("Invalid pattern object " + patterns[i].getClass());
             }
         }
         return true;
