@@ -152,6 +152,7 @@ public final class Parser {
      * {@code RETURN}.
      */
     public Ast.Statement.Return parseReturnStatement() throws ParseException {
+
         throw new UnsupportedOperationException(); //TODO
     }
 
@@ -159,8 +160,7 @@ public final class Parser {
      * Parses the {@code expression} rule.
      */
     public Ast.Expression parseExpression() throws ParseException {
-//        throw new UnsupportedOperationException(); //TODO
-        return parsePrimaryExpression();
+        return parseLogicalExpression();
     }
 
 
@@ -168,28 +168,55 @@ public final class Parser {
      * Parses the {@code logical-expression} rule.
      */
     public Ast.Expression parseLogicalExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression lhs = parseComparisonExpression();
+        while (match("&&", "||")) {
+            String operator = tokens.get(-1).getLiteral();
+            Ast.Expression rhs = parseComparisonExpression();
+            lhs = new Ast.Expression.Binary(operator, lhs, rhs);
+        }
+        return lhs;
+        //TODO
     }
 
     /**
      * Parses the {@code equality-expression} rule.
      */
     public Ast.Expression parseComparisonExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression lhs = parseAdditiveExpression();
+        while (match("<", ">", "==", "!=")) {
+            String operator = tokens.get(-1).getLiteral();
+            Ast.Expression rhs = parseAdditiveExpression();
+            lhs = new Ast.Expression.Binary(operator, lhs, rhs);
+        }
+        return lhs;
+        //TODO
     }
 
     /**
      * Parses the {@code additive-expression} rule.
      */
     public Ast.Expression parseAdditiveExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression lhs = parseMultiplicativeExpression();
+        while (match("+", "-")) {
+            String operator = tokens.get(-1).getLiteral();
+            Ast.Expression rhs = parseMultiplicativeExpression();
+            lhs = new Ast.Expression.Binary(operator, lhs, rhs);
+        }
+        return lhs;
     }
 
     /**
      * Parses the {@code multiplicative-expression} rule.
      */
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+
+         Ast.Expression lhs = parsePrimaryExpression();
+         while (match("*", "/", "^")) {
+             String operator = tokens.get(-1).getLiteral();
+             Ast.Expression rhs = parsePrimaryExpression();
+             lhs = new Ast.Expression.Binary(operator, lhs, rhs);
+         }
+        return lhs;
     }
 
     /**
