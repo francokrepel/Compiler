@@ -169,7 +169,7 @@ public final class Parser {
      */
     public Ast.Expression parseLogicalExpression() throws ParseException {
         Ast.Expression lhs = parseComparisonExpression();
-        while (match("&&", "||")) {
+        while (match("&&") || match("||")) {
             String operator = tokens.get(-1).getLiteral();
             Ast.Expression rhs = parseComparisonExpression();
             lhs = new Ast.Expression.Binary(operator, lhs, rhs);
@@ -183,7 +183,7 @@ public final class Parser {
      */
     public Ast.Expression parseComparisonExpression() throws ParseException {
         Ast.Expression lhs = parseAdditiveExpression();
-        while (match("<", ">", "==", "!=")) {
+        while (match("<") || match(">") || match( "==") || match("!=")) {
             String operator = tokens.get(-1).getLiteral();
             Ast.Expression rhs = parseAdditiveExpression();
             lhs = new Ast.Expression.Binary(operator, lhs, rhs);
@@ -197,7 +197,7 @@ public final class Parser {
      */
     public Ast.Expression parseAdditiveExpression() throws ParseException {
         Ast.Expression lhs = parseMultiplicativeExpression();
-        while (match("+", "-")) {
+        while (match("+") || match("-")) {
             String operator = tokens.get(-1).getLiteral();
             Ast.Expression rhs = parseMultiplicativeExpression();
             lhs = new Ast.Expression.Binary(operator, lhs, rhs);
@@ -211,7 +211,7 @@ public final class Parser {
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
 
          Ast.Expression lhs = parsePrimaryExpression();
-         while (match("*", "/", "^")) {
+         while (match("*") || match("/") || match("^")) {
              String operator = tokens.get(-1).getLiteral();
              Ast.Expression rhs = parsePrimaryExpression();
              lhs = new Ast.Expression.Binary(operator, lhs, rhs);
