@@ -295,10 +295,10 @@ public final class Parser {
             } else if (match("[")) {
                 Ast.Expression expression = parseExpression();
                 if (match("]")) {
-//                    return new Ast.Expression.Access(expression);
+                    return new Ast.Expression.Access(Optional.of(expression), identifier);
                 }
             } else { // only identifier ?
-                return new Ast.Expression.Access(Optional.empty(), tokens.get(-1).getLiteral());
+                return new Ast.Expression.Access(Optional.empty(), identifier);
             }
         }
         throw new ParseException("Invalid primary expression at: ", tokens.get(-1).getIndex());
