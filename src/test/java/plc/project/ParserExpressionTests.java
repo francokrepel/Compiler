@@ -256,6 +256,53 @@ final class ParserExpressionTests {
         );
     }
 
+    @ParameterizedTest
+    @MethodSource
+    void testPriority(String test, List<Token> tokens, Ast.Expression.Binary expected) {
+        test(tokens, expected, Parser::parseExpression);
+    }
+
+    private static Stream<Arguments> testPriority() {
+        return Stream.of(
+                Arguments.of("Addition Multiplication",
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "A", 0),
+                                new Token(Token.Type.OPERATOR, "+", 2),
+                                new Token(Token.Type.IDENTIFIER, "B", 4),
+                                new Token(Token.Type.OPERATOR, "*", 6),
+                                new Token(Token.Type.IDENTIFIER, "C", 8)
+                        ),
+                        new Ast.Expression.Binary("+", new Ast.Expression.Access(Optional.empty(), "A"),
+                                new Ast.Expression.Binary("*", new Ast.Expression.Access(Optional.empty(), "B"), new Ast.Expression.Access(Optional.empty(), "C"))
+                        )
+                ),
+                Arguments.of("And Or",
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "A", 0),
+                                new Token(Token.Type.OPERATOR, "&&", 2),
+                                new Token(Token.Type.IDENTIFIER, "B", 5),
+                                new Token(Token.Type.OPERATOR, "||", 7),
+                                new Token(Token.Type.IDENTIFIER, "C", 10)
+                        ),
+                        new Ast.Expression.Binary("||", new Ast.Expression.Binary("&&", new Ast.Expression.Access(Optional.empty(), "A"), new Ast.Expression.Access(Optional.empty(), "B")),
+                                new Ast.Expression.Access(Optional.empty(), "C")
+                        )
+                ),
+                Arguments.of("Equals not equals",
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "A", 0),
+                                new Token(Token.Type.OPERATOR, "==", 2),
+                                new Token(Token.Type.IDENTIFIER, "B", 5),
+                                new Token(Token.Type.OPERATOR, "!=", 7),
+                                new Token(Token.Type.IDENTIFIER, "C", 10)
+                        ),
+                        new Ast.Expression.Binary("!=", new Ast.Expression.Binary("==", new Ast.Expression.Access(Optional.empty(), "A"), new Ast.Expression.Access(Optional.empty(), "B")),
+                                new Ast.Expression.Access(Optional.empty(), "C")
+                        )
+                )
+        );
+    }
+
     /**
      * Standard test function. If expected is null, a ParseException is expected
      * to be thrown (not used in the provided tests).
