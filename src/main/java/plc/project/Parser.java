@@ -86,18 +86,29 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Statement parseStatement() throws ParseException {
-        // expression ('=' expression)? ';'
-        Ast.Expression lhs = parseExpression();
-        if (match("=")) {
-            Ast.Expression rhs = parseExpression();
+
+        if (match("LET")) {
+            return parseDeclarationStatement();
+        } else if (match("SWITCH")) {
+            return parseSwitchStatement();
+        } else if (match("IF")) {
+            return parseIfStatement();
+        } else if (match("WHILE")) {
+            return parseWhileStatement();
+        } else if (match("RETURN")) {
+            return parseReturnStatement();
+        } else {
+            Ast.Expression lhs = parseExpression();
+            if (match("=")) {
+                Ast.Expression rhs = parseExpression();
+                if (match(";")) {
+                    return new Ast.Statement.Assignment(lhs, rhs);
+                }
+            }
             if (match(";")) {
-                return new Ast.Statement.Assignment(lhs, rhs);
+                return new Ast.Statement.Expression(lhs);
             }
         }
-        if (match(";")) {
-            return new Ast.Statement.Expression(lhs);
-        }
-
         throw new ParseException("parseStatement", tokens.get(-1).getIndex()); //TODO
     }
 
@@ -107,7 +118,16 @@ public final class Parser {
      * statement, aka {@code LET}.
      */
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Statement.Declaration out;
+        if (match(Token.Type.IDENTIFIER)) {
+
+            while (match("=")) {
+
+            }
+        }
+
+
+        throw new ParseException("Invalid declaration at: ", tokens.get(-1).getIndex()); //TODO
     }
 
     /**
@@ -175,7 +195,6 @@ public final class Parser {
             lhs = new Ast.Expression.Binary(operator, lhs, rhs);
         }
         return lhs;
-        //TODO
     }
 
     /**
@@ -189,7 +208,6 @@ public final class Parser {
             lhs = new Ast.Expression.Binary(operator, lhs, rhs);
         }
         return lhs;
-        //TODO
     }
 
     /**
