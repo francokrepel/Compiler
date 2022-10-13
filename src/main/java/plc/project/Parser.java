@@ -118,16 +118,22 @@ public final class Parser {
      * statement, aka {@code LET}.
      */
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
-        Ast.Statement.Declaration out;
-        if (match(Token.Type.IDENTIFIER)) {
-
-            while (match("=")) {
-
-            }
+        if (!match(Token.Type.IDENTIFIER)) {
+            throw new ParseException("Expected Identifier", tokens.get(-1).getIndex()); //TODO: this might be the wrong index
         }
 
+        String name = tokens.get(-1).getLiteral();
+        Optional<Ast.Expression> value = Optional.empty();
 
-        throw new ParseException("Invalid declaration at: ", tokens.get(-1).getIndex()); //TODO
+        if (match("=")) {
+            value = Optional.of(parseExpression());
+        }
+        if (!match(";")) {
+            throw new ParseException("Expected Semicolon", tokens.get(-1).getIndex()); //TODO: this might be the wrong index
+        }
+        return new Ast.Statement.Declaration(name, value);
+
+        //TODO
     }
 
     /**
