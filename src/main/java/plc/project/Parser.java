@@ -77,7 +77,12 @@ public final class Parser {
      * preceding token indicates the opening a block.
      */
     public List<Ast.Statement> parseBlock() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        List<Ast.Statement> out = null;
+        while (parseStatement() != null) {
+            out.add(parseStatement());
+        }
+        throw new ParseException("Expected Statement", tokens.get(-1).getIndex());
+        //TODO
     }
 
     /**
@@ -142,7 +147,27 @@ public final class Parser {
      * {@code IF}.
      */
     public Ast.Statement.If parseIfStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression e;
+        List<Ast.Statement> then = null;
+        List<Ast.Statement> els = null;
+
+        try {
+            e = parseExpression();
+        } catch (ParseException p) {
+            throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
+        }
+
+        if (match("DO")) {
+            then.add((Ast.Statement) parseBlock());
+        }
+        if (match("ELSE")) {
+            els.add((Ast.Statement) parseBlock());
+        }
+        if (!match("END")) {
+            throw new ParseException("Expected END", tokens.get(-1).getIndex());
+        }
+        return new Ast.Statement.If(e, then, els);
+        //TODO
     }
 
     /**
