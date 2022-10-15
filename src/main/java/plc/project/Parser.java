@@ -78,11 +78,14 @@ public final class Parser {
      */
     public List<Ast.Statement> parseBlock() throws ParseException {
         List<Ast.Statement> out = null;
-        while (parseStatement() != null) {
+        out.add(parseStatement());
+//        while (parseStatement() != null) {
+        while (!(match("END") || match("CASE") || match("DEFAULT") || match("ELSE"))) {
             out.add(parseStatement());
         }
-        throw new ParseException("Expected Statement", tokens.get(-1).getIndex());
+        return out;
         //TODO
+        //END CASE DEFAULT ELSE
     }
 
     /**
@@ -203,8 +206,16 @@ public final class Parser {
      * {@code RETURN}.
      */
     public Ast.Statement.Return parseReturnStatement() throws ParseException {
-
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression e;
+        try {
+            e = parseExpression();
+        } catch (ParseException p) {
+            throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
+        }
+        if (!match(";")) {
+            throw new ParseException("Expected Semicolon", tokens.get(-1).getIndex()); //TODO: this might be the wrong index
+        }
+        return new Ast.Statement.Return(e);
     }
 
     /**
