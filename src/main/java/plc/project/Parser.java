@@ -274,7 +274,30 @@ public final class Parser {
      * {@code SWITCH}.
      */
     public Ast.Statement.Switch parseSwitchStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression e;
+        List<Ast.Statement.Case> cases = new ArrayList<Ast.Statement.Case>();
+
+        try {
+            e = parseExpression();
+        } catch (ParseException p) {
+            throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
+        }
+
+        while (!match("DEFAULT")) {
+            cases.add(parseCaseStatement());
+        }
+
+        if (!match("DEFAULT")) {
+            throw new ParseException("Expected DEFAULT", tokens.get(1).getIndex());
+        }
+
+        cases.add(parseCaseStatement());
+
+        if (!match("END")) {
+            throw new ParseException("Expected END", tokens.get(-1).getIndex());
+        }
+
+        return new Ast.Statement.Switch(e, cases);
     }
 
     /**
