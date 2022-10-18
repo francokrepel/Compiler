@@ -29,7 +29,26 @@ public final class Parser {
      * Parses the {@code source} rule.
      */
     public Ast.Source parseSource() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        List<Ast.Global> global = new ArrayList<Ast.Global>();
+        List<Ast.Function> func = new ArrayList<Ast.Function>();
+
+        try {
+            //ADJUST: global only supposed to be before function!
+            while (tokens.has(0)) {
+                if (peek("LIST") || match("VAR") || match("VAL")) {
+                    global.add(parseGlobal());
+                }
+                if (match("FUN")) {
+                    if (peek("LIST") || match("VAR") || match("VAL")) { //global after function
+                        throw new ParseException("Function after Global", tokens.get(-1).getIndex());
+                    }
+                    func.add(parseFunction());
+                }
+            }
+            return new Ast.Source(global, func);
+        } catch (ParseException e) {
+            throw new ParseException("Invalid parseSource expression at  ", tokens.get(-1).getIndex());
+        }
     }
 
     /**
@@ -37,7 +56,15 @@ public final class Parser {
      * next tokens start a global, aka {@code LIST|VAL|VAR}.
      */
     public Ast.Global parseGlobal() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (match("LIST")) {
+
+        } else if (match("VAR")) {
+
+        } else if (match("VAL")) {
+
+        }
+
+        throw new ParseException("Global Exception at ", tokens.get(-1).getIndex());
     }
 
     /**
