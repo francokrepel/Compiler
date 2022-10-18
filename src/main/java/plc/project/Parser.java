@@ -49,6 +49,7 @@ public final class Parser {
         } catch (ParseException e) {
             throw new ParseException("Invalid parseSource expression at  ", tokens.get(-1).getIndex());
         }
+        //TODO
     }
 
     /**
@@ -156,15 +157,16 @@ public final class Parser {
      * preceding token indicates the opening a block.
      */
     public List<Ast.Statement> parseBlock() throws ParseException {
-        List<Ast.Statement> out = null;
-        out.add(parseStatement());
-//        while (parseStatement() != null) {
-        while (!(match("END") || match("CASE") || match("DEFAULT") || match("ELSE"))) {
-            out.add(parseStatement());
+        List<Ast.Statement> block = new ArrayList<Ast.Statement>();
+        try {
+            while (!peek("END") && !peek("DEFAULT") && !peek("ELSE") && !peek("CASE")) {
+                block.add(parseStatement());
+            }
+        } catch (ParseException p) {
+            throw new ParseException("Expected statement", tokens.get(-1).getIndex());
         }
-        return out;
+        return block;
         //TODO
-        //END CASE DEFAULT ELSE
     }
 
     /**
@@ -196,7 +198,7 @@ public final class Parser {
                 return new Ast.Statement.Expression(lhs);
             }
         }
-        throw new ParseException("parseStatement", tokens.get(-1).getIndex()); //TODO
+        throw new ParseException("parseStatement", tokens.get(-1).getIndex());
     }
 
     /**
@@ -206,7 +208,7 @@ public final class Parser {
      */
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
         if (!match(Token.Type.IDENTIFIER)) {
-            throw new ParseException("Expected Identifier", tokens.get(-1).getIndex()); //TODO: this might be the wrong index
+            throw new ParseException("Expected Identifier", tokens.get(-1).getIndex());
         }
 
         String name = tokens.get(-1).getLiteral();
@@ -216,11 +218,9 @@ public final class Parser {
             value = Optional.of(parseExpression());
         }
         if (!match(";")) {
-            throw new ParseException("Expected Semicolon", tokens.get(-1).getIndex()); //TODO: this might be the wrong index
+            throw new ParseException("Expected Semicolon", tokens.get(-1).getIndex());
         }
         return new Ast.Statement.Declaration(name, value);
-
-        //TODO
     }
 
     /**
@@ -230,8 +230,8 @@ public final class Parser {
      */
     public Ast.Statement.If parseIfStatement() throws ParseException {
         Ast.Expression e;
-        List<Ast.Statement> then = null;
-        List<Ast.Statement> els = null;
+        List<Ast.Statement> then = new ArrayList<Ast.Statement>();
+        List<Ast.Statement> els = new ArrayList<Ast.Statement>();
 
         try {
             e = parseExpression();
