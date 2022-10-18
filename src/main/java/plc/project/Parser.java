@@ -270,7 +270,30 @@ public final class Parser {
      * default block of a switch statement, aka {@code CASE} or {@code DEFAULT}.
      */
     public Ast.Statement.Case parseCaseStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression e;
+        List<Ast.Statement> statements = new ArrayList<Ast.Statement>();
+
+        try {
+            e = parseExpression();
+        } catch (ParseException p) {
+            throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
+        }
+
+        if (match("CASE")) {
+            if (!match(":")) {
+                throw new ParseException("Expected :", tokens.get(-1).getIndex());
+            }
+
+            for (Ast.Statement s : parseBlock()) {
+                statements.add(s);
+            }
+
+        } else if (match("DEFAULT")) {
+            for (Ast.Statement s : parseBlock()) {
+                statements.add(s);
+            }
+        }
+        return new Ast.Statement.Case(Optional.ofNullable(e), statements);
     }
 
     /**
@@ -279,7 +302,25 @@ public final class Parser {
      * {@code WHILE}.
      */
     public Ast.Statement.While parseWhileStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression e;
+        List<Ast.Statement> statements = new ArrayList<Ast.Statement>();
+
+        try {
+            e = parseExpression();
+        } catch (ParseException p) {
+            throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
+        }
+
+        if (match("DO")) {
+            for (Ast.Statement s : parseBlock()) {
+                statements.add(s);
+            }
+        }
+
+        if (!match("END")) {
+            throw new ParseException("Expected END", tokens.get(-1).getIndex());
+        }
+        return new Ast.Statement.While(e, statements);
     }
 
     /**
