@@ -307,6 +307,7 @@ public final class Parser {
             }
         }
         return new Ast.Statement.Case(Optional.ofNullable(e), statements);
+        //TODO
     }
 
     /**
@@ -349,7 +350,7 @@ public final class Parser {
             throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
         }
         if (!match(";")) {
-            throw new ParseException("Expected Semicolon", tokens.get(-1).getIndex()); //TODO: this might be the wrong index
+            throw new ParseException("Expected Semicolon", tokens.get(-1).getIndex());
         }
         return new Ast.Statement.Return(e);
     }
