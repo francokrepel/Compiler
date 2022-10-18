@@ -95,7 +95,15 @@ public final class Parser {
      * next token declares a mutable global variable, aka {@code VAR}.
      */
     public Ast.Global parseMutable() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (match(Token.Type.IDENTIFIER)) {
+            String identifier = tokens.get(-1).getLiteral();
+            Optional<Ast.Expression> value = Optional.empty();
+            if (match("=")) {
+                value = Optional.of(parseExpression());
+            }
+            return new Ast.Global(identifier, true, value);
+        }
+        throw new ParseException("parseMutable Exception at ", tokens.get(-1).getIndex());
     }
 
     /**
@@ -103,7 +111,13 @@ public final class Parser {
      * next token declares an immutable global variable, aka {@code VAL}.
      */
     public Ast.Global parseImmutable() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (match(Token.Type.IDENTIFIER)) {
+            String identifier = tokens.get(-1).getLiteral();
+            if (match("=")) {
+                return new Ast.Global(identifier, false, Optional.of(parseExpression()));
+            }
+        }
+        throw new ParseException("parseImmutable Exception at ", tokens.get(-1).getIndex());
     }
 
     /**
@@ -111,7 +125,30 @@ public final class Parser {
      * next tokens start a method, aka {@code FUN}.
      */
     public Ast.Function parseFunction() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (match(Token.Type.IDENTIFIER)) {
+            String name = tokens.get(-1).getLiteral();
+            if (match("(")) {
+                List<String> parameters = new ArrayList<String>();
+                if (match(Token.Type.IDENTIFIER)) {
+                    parameters.add(tokens.get(-1).getLiteral());
+                    while (match(",")) {
+                        if (peek(")")) { throw new ParseException("Trailing Comma",tokens.get(-1).getIndex()); }
+                        if (match(Token.Type.IDENTIFIER)) {
+                            parameters.add(tokens.get(-1).getLiteral());
+                        }
+                    }
+                }
+                if (match(")")) {
+                    if (match("DO")) {
+                        List<Ast.Statement> statements = parseBlock();
+                        if (match("END")) {
+                            return new Ast.Function(name, parameters, statements);
+                        }
+                    }
+                }
+            }
+        }
+        throw new ParseException("parseFunction Exception at ", tokens.get(-1).getIndex());
     }
 
     /**
