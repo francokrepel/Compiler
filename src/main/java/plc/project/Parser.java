@@ -240,16 +240,19 @@ public final class Parser {
         }
 
         if (match("DO")) {
-            then.add((Ast.Statement) parseBlock());
+            for (Ast.Statement s : parseBlock()) {
+                then.add(s);
+            }
         }
         if (match("ELSE")) {
-            els.add((Ast.Statement) parseBlock());
+            for (Ast.Statement s : parseBlock()) {
+                els.add(s);
+            }
         }
         if (!match("END")) {
             throw new ParseException("Expected END", tokens.get(-1).getIndex());
         }
         return new Ast.Statement.If(e, then, els);
-        //TODO
     }
 
     /**
