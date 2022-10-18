@@ -56,14 +56,13 @@ public final class Parser {
      * next tokens start a global, aka {@code LIST|VAL|VAR}.
      */
     public Ast.Global parseGlobal() throws ParseException {
-        if (match("LIST")) {
-
-        } else if (match("VAR")) {
-
-        } else if (match("VAL")) {
-
+        if (match("LIST", ";")) {
+            parseList();
+        } else if (match("VAR", ";")) {
+            parseMutable();
+        } else if (match("VAL", ";")) {
+            parseImmutable();
         }
-
         throw new ParseException("Global Exception at ", tokens.get(-1).getIndex());
     }
 
@@ -72,7 +71,22 @@ public final class Parser {
      * next token declares a list, aka {@code LIST}.
      */
     public Ast.Global parseList() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        List<Ast.Expression> arguments = new ArrayList<Ast.Expression>();
+        if (match(Token.Type.IDENTIFIER)) {
+            String identifier = tokens.get(-1).getLiteral();
+            if (match("=")) {
+                if (match("[")) {
+                    arguments.add(parseExpression());
+                    while (match(",")) { //(',' expression)*)?
+                        arguments.add(parseExpression());
+                    }
+                    if (match("]")) {
+                        return new Ast.Global(identifier, true, Optional.of(new Ast.Expression.PlcList(arguments)));
+                    }
+                }
+            }
+        }
+        throw new ParseException("parseList Exception at ", tokens.get(-1).getIndex());
     }
 
     /**
