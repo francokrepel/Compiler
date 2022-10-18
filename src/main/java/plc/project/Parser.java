@@ -31,18 +31,17 @@ public final class Parser {
     public Ast.Source parseSource() throws ParseException {
         List<Ast.Global> global = new ArrayList<Ast.Global>();
         List<Ast.Function> func = new ArrayList<Ast.Function>();
-
         try {
             //ADJUST: global only supposed to be before function!
             while (tokens.has(0)) {
-                if (peek("LIST") || match("VAR") || match("VAL")) {
+                if (peek("LIST") || peek("VAR") || peek("VAL")) {
                     global.add(parseGlobal());
                 }
                 if (match("FUN")) {
-                    if (peek("LIST") || match("VAR") || match("VAL")) { //global after function
+                    func.add(parseFunction());
+                    if (peek("LIST") || peek("VAR") || peek("VAL")) { //global after function
                         throw new ParseException("Function after Global", tokens.get(-1).getIndex());
                     }
-                    func.add(parseFunction());
                 }
             }
             return new Ast.Source(global, func);
@@ -56,14 +55,27 @@ public final class Parser {
      * next tokens start a global, aka {@code LIST|VAL|VAR}.
      */
     public Ast.Global parseGlobal() throws ParseException {
-        if (match("LIST", ";")) {
-            parseList();
-        } else if (match("VAR", ";")) {
-            parseMutable();
-        } else if (match("VAL", ";")) {
-            parseImmutable();
+//        System.out.print(tokens.get(0).getLiteral());
+        if (match("LIST")) {
+            Ast.Global list = parseList();
+            if (!match(";")) {
+                throw new ParseException("Missing ; at  ", tokens.get(-1).getIndex());
+            }
+            return list;
+        } else if (match("VAR")) {
+            Ast.Global mutable = parseMutable();
+            if (!match(";")) {
+                throw new ParseException("Missing ; at  ", tokens.get(-1).getIndex());
+            }
+            return mutable;
+        } else if (match("VAL")) {
+            Ast.Global immutable = parseImmutable();
+            if (!match(";")) {
+                throw new ParseException("Missing ; at  ", tokens.get(-1).getIndex());
+            }
+            return immutable;
         }
-        throw new ParseException("Global Exception at ", tokens.get(-1).getIndex());
+        throw new ParseException("parseGlobal exception at ", tokens.get(-1).getIndex());
     }
 
     /**
@@ -129,6 +141,7 @@ public final class Parser {
             String name = tokens.get(-1).getLiteral();
             if (match("(")) {
                 List<String> parameters = new ArrayList<String>();
+//                System.out.print(tokens.get(-1).getLiteral());
                 if (match(Token.Type.IDENTIFIER)) {
                     parameters.add(tokens.get(-1).getLiteral());
                     while (match(",")) {
