@@ -78,10 +78,11 @@ public final class Parser {
                 if (match("[")) {
                     arguments.add(parseExpression());
                     while (match(",")) { //(',' expression)*)?
+                        if (peek("]")) { throw new ParseException("Trailing Comma",tokens.get(-1).getIndex()); }
                         arguments.add(parseExpression());
-                    }
-                    if (match("]")) {
-                        return new Ast.Global(identifier, true, Optional.of(new Ast.Expression.PlcList(arguments)));
+                        if (match("]")) {
+                            return new Ast.Global(identifier, true, Optional.of(new Ast.Expression.PlcList(arguments)));
+                        }
                     }
                 }
             }
