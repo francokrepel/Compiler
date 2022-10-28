@@ -63,7 +63,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Declaration ast) {
-
         Optional optional = ast.getValue();
         Boolean present = optional.isPresent();
 
@@ -111,7 +110,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Literal ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if (ast.getLiteral().toString().equals("NIL")) {
+            return null;
+        }
+        return  Environment.create(ast.getLiteral());
+       // throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
