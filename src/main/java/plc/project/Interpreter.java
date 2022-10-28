@@ -104,19 +104,19 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     @Override
-    public Environment.PlcObject visit(Ast.Statement.Return ast) {
-        throw new UnsupportedOperationException(); //TODO
+    public Environment.PlcObject visit(Ast.Statement.Return ast) {throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Literal ast) {
-        if (ast.getLiteral().toString().equals("NIL")) {
-            return null;
+//        System.out.println(ast.getLiteral());
+        if (ast.getLiteral() == null) {
+            return Environment.NIL;
         }
         return  Environment.create(ast.getLiteral());
        // throw new UnsupportedOperationException(); //TODO
     }
-
+//ast.getLiteral().toString().equals("NIL")
     @Override
     public Environment.PlcObject visit(Ast.Expression.Group ast) {
         throw new UnsupportedOperationException(); //TODO
