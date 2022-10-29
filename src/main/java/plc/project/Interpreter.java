@@ -111,7 +111,8 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Literal ast) {
-        throw new UnsupportedOperationException(); //TODO
+        return (Environment.PlcObject) ast.getLiteral();
+        //TODO
     }
 
     @Override
