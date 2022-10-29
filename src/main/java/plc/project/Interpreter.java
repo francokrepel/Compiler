@@ -111,10 +111,14 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Literal ast) {
-        return (Environment.PlcObject) ast.getLiteral();
-        //TODO
+//        System.out.println(ast.getLiteral());
+        if (ast.getLiteral() == null) {
+            return Environment.NIL;
+        }
+        return  Environment.create(ast.getLiteral());
+       // throw new UnsupportedOperationException(); //TODO
     }
-
+//ast.getLiteral().toString().equals("NIL")
     @Override
     public Environment.PlcObject visit(Ast.Expression.Group ast) {
         throw new UnsupportedOperationException(); //TODO
