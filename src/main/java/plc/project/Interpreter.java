@@ -109,24 +109,86 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Literal ast) {
-//        System.out.println(ast.getLiteral());
         if (ast.getLiteral() == null) {
             return Environment.NIL;
         }
         return  Environment.create(ast.getLiteral());
        // throw new UnsupportedOperationException(); //TODO
     }
-//ast.getLiteral().toString().equals("NIL")
     @Override
     public Environment.PlcObject visit(Ast.Expression.Group ast) {
-        throw new UnsupportedOperationException(); //TODO
+        return visit(ast.getExpression());
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Binary ast) {
+        //later add the second && as another if statement, so it makes it easier to throw an error accruately?
+
+        // && / ||
+        if (visit(ast.getLeft()).getValue() instanceof Boolean) {
+            switch (ast.getOperator()) {
+                case "&&":
+                    if (!requireType(Boolean.class, visit(ast.getLeft()))) { //if LHS is false, SHORT CIRCUIT FALSE IF LHS FALSE
+                        return Environment.create(false);
+                    } else if (visit(ast.getRight()).getValue() instanceof Boolean && !requireType(Boolean.class, visit(ast.getRight()))) {
+                        return Environment.create(false);
+                    }
+                    return Environment.create(true);
+                case "||":
+                    if (requireType(Boolean.class, visit(ast.getLeft()))) { //if LHS is true, SHORT CIRCUIT TRUE IF LHS TRUE
+                        return Environment.create(true);
+                    } else if (requireType(Boolean.class, visit(ast.getRight())) && visit(ast.getRight()).getValue() instanceof Boolean) {
+                        return Environment.create(true);
+                    }
+                    return Environment.create(false);
+            }
+        }
+        //Integers
+        if (visit(ast.getLeft()).getValue() instanceof BigInteger && visit(ast.getRight()).getValue() instanceof BigInteger) {  //SEPERATE INTO TWO SO U CAN THROW ERROR?
+            switch (ast.getOperator()) {
+                case "+":
+                    return Environment.create(requireType(BigInteger.class ,visit(ast.getLeft())).add(requireType(BigInteger.class, visit(ast.getRight()))));
+                case "-":
+                    return Environment.create(requireType(BigInteger.class ,visit(ast.getLeft())).subtract(requireType(BigInteger.class, visit(ast.getRight()))));
+                case "*":
+                    return Environment.create(requireType(BigInteger.class ,visit(ast.getLeft())).multiply(requireType(BigInteger.class, visit(ast.getRight()))));
+                case "/": //returns ceiling
+                    return Environment.create(requireType(BigInteger.class ,visit(ast.getLeft())).divide(requireType(BigInteger.class, visit(ast.getRight()))));
+                case "^":
+                    return Environment.create(requireType(BigInteger.class ,visit(ast.getLeft())).modPow(requireType(BigInteger.class,visit(ast.getRight())), new BigInteger("9223372036854775807")));
+                case "<":
+            }
+        }
+        //Decimals
+        if (visit(ast.getLeft()).getValue() instanceof BigDecimal && visit(ast.getRight()).getValue() instanceof BigDecimal) {  //SEPERATE INTO TWO SO U CAN THROW ERROR?
+            switch (ast.getOperator()) {
+                case "+":
+                    return Environment.create(requireType(BigDecimal.class ,visit(ast.getLeft())).add(requireType(BigDecimal.class, visit(ast.getRight()))));
+                case "-":
+                    return Environment.create(requireType(BigDecimal.class ,visit(ast.getLeft())).subtract(requireType(BigDecimal.class, visit(ast.getRight()))));
+                case "*":
+                    return Environment.create(requireType(BigDecimal.class ,visit(ast.getLeft())).multiply(requireType(BigDecimal.class, visit(ast.getRight()))));
+                case "/":
+                    return Environment.create(requireType(BigDecimal.class ,visit(ast.getLeft())).divide(requireType(BigDecimal.class, visit(ast.getRight())), RoundingMode.HALF_EVEN));
+                    //it seems that there is no way to do power of two big Decimals
+//                case "^":
+//                    return Environment.create(requireType(BigDecimal.class ,visit(ast.getLeft())).modPow(requireType(BigDecimal.class,visit(ast.getRight()))));
+            }
+        }
+        // if not then throw exception as you may have one integer and a different type, or used an unknown operator?
+
+        //Concatenation
+        if (visit(ast.getLeft()).getValue() instanceof String && visit(ast.getRight()).getValue() instanceof String) {
+            switch (ast.getOperator()) {
+                case "+":
+                    return Environment.create(requireType(String.class ,visit(ast.getLeft())).concat(requireType(String.class, visit(ast.getRight()))));
+            }
+
+        }
         throw new UnsupportedOperationException(); //TODO
     }
-
+//    BigDecimal bd2 = requireType(BigDecimal.class, Environment.create(args.get(0).getValue()));
     @Override
     public Environment.PlcObject visit(Ast.Expression.Access ast) {
         throw new UnsupportedOperationException(); //TODO

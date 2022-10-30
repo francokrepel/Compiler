@@ -363,6 +363,13 @@ final class InterpreterTests {
                         ),
                         BigInteger.valueOf(11)
                 ),
+                Arguments.of("Power",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(new BigInteger("3")),
+                                new Ast.Expression.Literal(new BigInteger("4"))
+                        ),
+                        BigInteger.valueOf(81)
+                ),
                 // 1.2 / 3.4
                 Arguments.of("Division",
                         new Ast.Expression.Binary("/",
@@ -370,7 +377,15 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal(new BigDecimal("3.4"))
                         ),
                         new BigDecimal("0.4")
+                ),
+                Arguments.of("Division Integer?",
+                        new Ast.Expression.Binary("/",
+                                new Ast.Expression.Literal(new BigDecimal("5")),
+                                new Ast.Expression.Literal(new BigDecimal("2"))
+                        ),
+                        new BigDecimal("2")
                 )
+
         );
     }
 
