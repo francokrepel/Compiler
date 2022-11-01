@@ -99,9 +99,22 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         throw new UnsupportedOperationException(); //TODO
     }
 
+    // remeber Boolean by itself is not a class its Declaration for a type
     @Override
     public Environment.PlcObject visit(Ast.Statement.While ast) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        while (requireType(Boolean.class, visit(ast.getCondition()))) {
+            try {
+                scope = new Scope(scope);
+//                for (Ast.Statement stmt : ast.getStatements()) { //iterate through each statement
+//                    visit(stmt);
+//                }
+                ast.getStatements().forEach(this::visit); //remeber each ast.Statement is subclass of AST so by itself it has visit
+            } finally { //executes after try and after any exceptions
+                scope = scope.getParent();
+            }
+        }
+        return Environment.NIL;
+//        throw new UnsupportedOperationException(); //TODO (in lecture)
     }
 
     @Override
@@ -129,21 +142,52 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
         // && / ||
         if (visit(ast.getLeft()).getValue() instanceof Boolean) {
-            switch (ast.getOperator()) {
-                case "&&":
-                    if (!requireType(Boolean.class, visit(ast.getLeft()))) { //if LHS is false, SHORT CIRCUIT FALSE IF LHS FALSE
-                        return Environment.create(false);
-                    } else if (visit(ast.getRight()).getValue() instanceof Boolean && !requireType(Boolean.class, visit(ast.getRight()))) {
-                        return Environment.create(false);
-                    }
-                    return Environment.create(true);
-                case "||":
-                    if (requireType(Boolean.class, visit(ast.getLeft()))) { //if LHS is true, SHORT CIRCUIT TRUE IF LHS TRUE
+                switch (ast.getOperator()) {
+                    case "&&":
+                        if (!requireType(Boolean.class, visit(ast.getLeft()))) { //if LHS is false, SHORT CIRCUIT FALSE IF LHS FALSE
+                            return Environment.create(false);
+                        } else if (visit(ast.getRight()).getValue() instanceof Boolean && !requireType(Boolean.class, visit(ast.getRight()))) {
+                            return Environment.create(false);
+                        }
                         return Environment.create(true);
-                    } else if (requireType(Boolean.class, visit(ast.getRight())) && visit(ast.getRight()).getValue() instanceof Boolean) {
-                        return Environment.create(true);
-                    }
-                    return Environment.create(false);
+                    case "||":
+                        if (requireType(Boolean.class, visit(ast.getLeft()))) { //if LHS is true, SHORT CIRCUIT TRUE IF LHS TRUE
+                            return Environment.create(true);
+                        } else if (requireType(Boolean.class, visit(ast.getRight())) && visit(ast.getRight()).getValue() instanceof Boolean) {
+                            return Environment.create(true);
+                        }
+                        return Environment.create(false);
+                }
+        }
+        //  < / >
+        if (visit(ast.getLeft()).getValue() instanceof Comparable) {
+            if (visit(ast.getRight()).getValue() instanceof Comparable) {
+                switch (ast.getOperator()) {
+                    case "<":
+                        int lt = requireType(Comparable.class ,visit(ast.getLeft())).compareTo(requireType(Comparable.class ,visit(ast.getRight())));
+                        if (lt < 0) {
+                            return Environment.create(true);
+                        }
+                        return Environment.create(false);
+                    case ">":
+                        int gt = requireType(Comparable.class ,visit(ast.getLeft())).compareTo(requireType(Comparable.class ,visit(ast.getRight())));
+                        if (gt > 0) {
+                            return Environment.create(true);
+                        }
+                        return Environment.create(false);
+                    case "==":
+                        int eq = requireType(Comparable.class ,visit(ast.getLeft())).compareTo(requireType(Comparable.class ,visit(ast.getRight())));
+                        if (eq == 0) {
+                            return Environment.create(true);
+                        }
+                        return Environment.create(false);
+                    case "!=":
+                        int ne = requireType(Comparable.class ,visit(ast.getLeft())).compareTo(requireType(Comparable.class ,visit(ast.getRight())));
+                        if (ne != 0) {
+                            return Environment.create(true);
+                        }
+                        return Environment.create(false);
+                }
             }
         }
         //Integers
@@ -179,7 +223,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             }
         }
         // if not then throw exception as you may have one integer and a different type, or used an unknown operator?
-
         //Concatenation
         if (visit(ast.getLeft()).getValue() instanceof String && visit(ast.getRight()).getValue() instanceof String) {
             switch (ast.getOperator()) {
