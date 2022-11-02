@@ -32,6 +32,35 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
             return Environment.create(result);
         });
+
+        scope.defineFunction("converter", 2, args -> {
+            String number = new String();
+            int i, n = 0;
+            ArrayList<BigInteger> quotients = new ArrayList<BigInteger>();
+            ArrayList<BigInteger> remainders = new ArrayList<BigInteger>();
+
+            BigInteger base10 = requireType( //start w this
+                    BigInteger.class,
+                    Environment.create(args.get(0).getValue() )
+                    );
+            BigInteger base = requireType( //want to shift into this base value
+                    BigInteger.class,
+                    Environment.create(args.get(1).getValue() )
+            );
+
+            quotients.add(base10);
+
+            do {
+                quotients.add(quotients.get(n).divide(base));
+                remainders.add(quotients.get(n).subtract(quotients.get(n+1).multiply(base)));
+                n++;
+            } while(quotients.get(n).compareTo(BigInteger.ZERO) > 0);
+
+            for (i = 0; i < remainders.size(); i++) {
+                number = remainders.get(i).toString() + number;
+            }
+            return Environment.create(number);
+        });
     }
 
     public Scope getScope() {
