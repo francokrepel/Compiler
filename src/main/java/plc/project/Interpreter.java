@@ -69,7 +69,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Source ast) {
-
         throw new UnsupportedOperationException(); //TODO
     }
 
@@ -104,7 +103,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             scope.defineVariable(ast.getName(), true, Environment.NIL);
         }
 
-        throw new UnsupportedOperationException(); //TODO (in lecture 10/25/22)
+        return Environment.NIL;
     }
 
     @Override
@@ -157,7 +156,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             return Environment.NIL;
         }
         return  Environment.create(ast.getLiteral());
-       // throw new UnsupportedOperationException(); //TODO
     }
     @Override
     public Environment.PlcObject visit(Ast.Expression.Group ast) {
