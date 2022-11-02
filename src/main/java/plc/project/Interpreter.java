@@ -154,7 +154,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         if (ast.getLiteral() == null) {
             return Environment.NIL;
         }
-        return  Environment.create(ast.getLiteral());
+        return Environment.create(ast.getLiteral());
        // throw new UnsupportedOperationException(); //TODO
     }
     @Override
@@ -162,7 +162,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return visit(ast.getExpression());
 //        throw new UnsupportedOperationException(); //TODO
     }
-
     @Override
     public Environment.PlcObject visit(Ast.Expression.Binary ast) {
         //later add the second && as another if statement, so it makes it easier to throw an error accruately?
@@ -173,20 +172,22 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                     case "&&":
                         if (!requireType(Boolean.class, visit(ast.getLeft()))) { //if LHS is false, SHORT CIRCUIT FALSE IF LHS FALSE
                             return Environment.create(false);
-                        } else if (visit(ast.getRight()).getValue() instanceof Boolean && !requireType(Boolean.class, visit(ast.getRight()))) {
+                        } else if (visit(ast.getRight()).getValue() instanceof Boolean
+                                && !requireType(Boolean.class, visit(ast.getRight()))) {
                             return Environment.create(false);
                         }
                         return Environment.create(true);
                     case "||":
                         if (requireType(Boolean.class, visit(ast.getLeft()))) { //if LHS is true, SHORT CIRCUIT TRUE IF LHS TRUE
                             return Environment.create(true);
-                        } else if (requireType(Boolean.class, visit(ast.getRight())) && visit(ast.getRight()).getValue() instanceof Boolean) {
+                        } else if (requireType(Boolean.class, visit(ast.getRight()))
+                                && visit(ast.getRight()).getValue() instanceof Boolean) {
                             return Environment.create(true);
                         }
                         return Environment.create(false);
                 }
         }
-        //  < / >
+        //  < / > / == / !=
         if (visit(ast.getLeft()).getValue() instanceof Comparable) {
             if (visit(ast.getRight()).getValue() instanceof Comparable) {
                 switch (ast.getOperator()) {
@@ -260,9 +261,16 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         }
         throw new UnsupportedOperationException(); //TODO
     }
-//    BigDecimal bd2 = requireType(BigDecimal.class, Environment.create(args.get(0).getValue()));
     @Override
     public Environment.PlcObject visit(Ast.Expression.Access ast) {
+        Optional<Ast.Expression> offset = ast.getOffset();
+        if (offset.isPresent()) { //list variable
+            BigInteger _offset = requireType(BigInteger.class, visit(offset.get()));
+            return Environment.create(requireType(List.class, scope.lookupVariable(ast.getName()).getValue())
+                    .get(_offset.intValue()));
+        } else if (!offset.isPresent()) { //normal variable
+            return Environment.create(scope.lookupVariable(ast.getName()).getValue().getValue());
+        }
         throw new UnsupportedOperationException(); //TODO
     }
 
