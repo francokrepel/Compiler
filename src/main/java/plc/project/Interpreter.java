@@ -76,7 +76,18 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Global ast) {
 
-        throw new UnsupportedOperationException(); //TODO
+        Optional optional = ast.getValue();
+        Boolean present = optional.isPresent();
+
+        if (present) {
+            Ast.Expression expr = (Ast.Expression) optional.get();
+
+            scope.defineVariable(ast.getName(), true, visit(expr));
+        } else {
+            scope.defineVariable(ast.getName(), true, Environment.NIL);
+        }
+
+        return Environment.NIL; //TODO
     }
 
     @Override
@@ -92,6 +103,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Declaration ast) {
+
         Optional optional = ast.getValue();
         Boolean present = optional.isPresent();
 
@@ -103,7 +115,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             scope.defineVariable(ast.getName(), true, Environment.NIL);
         }
 
-        throw new UnsupportedOperationException(); //TODO (in lecture 10/25/22)
+        return Environment.NIL;
     }
 
     @Override
@@ -114,7 +126,19 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Statement.If ast) {
 
-        throw new UnsupportedOperationException(); //TODO
+        if (requireType(Boolean.class, visit(ast.getCondition()))) {
+            try {
+                scope = new Scope(scope);
+                ast.getThenStatements().forEach(this::visit);
+            } finally {
+                scope = scope.getParent();
+                ast.getElseStatements().forEach(this::visit);
+            }
+        }
+
+        return Environment.NIL;
+
+  //      throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -146,7 +170,8 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     @Override
-    public Environment.PlcObject visit(Ast.Statement.Return ast) {throw new UnsupportedOperationException(); //TODO
+    public Environment.PlcObject visit(Ast.Statement.Return ast) {
+        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -154,14 +179,14 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         if (ast.getLiteral() == null) {
             return Environment.NIL;
         }
-        return Environment.create(ast.getLiteral());
-       // throw new UnsupportedOperationException(); //TODO
+        return  Environment.create(ast.getLiteral());
     }
     @Override
     public Environment.PlcObject visit(Ast.Expression.Group ast) {
         return visit(ast.getExpression());
 //        throw new UnsupportedOperationException(); //TODO
     }
+
     @Override
     public Environment.PlcObject visit(Ast.Expression.Binary ast) {
         //later add the second && as another if statement, so it makes it easier to throw an error accruately?
