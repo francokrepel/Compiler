@@ -6,7 +6,6 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
@@ -120,12 +119,17 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Assignment ast) {
+//        System.out.println("hi");
+//        requireType(Ast.Expression.Access.class, visit(ast.getReceiver()));
+//        System.out.println("hiii bye");
+//        String recieverName = ast.getReceiver().toString();
+//        Environment.PlcObject value = visit(ast.getValue());
+//        scope.lookupVariable(ast.getReceiver().toString()).setValue(visit(ast.getValue()));
         throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.If ast) {
-
         if (requireType(Boolean.class, visit(ast.getCondition()))) {
             try {
                 scope = new Scope(scope);
@@ -143,12 +147,45 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Switch ast) {
-        throw new UnsupportedOperationException(); //TODO
+        //SO DEFAULT WILL ALSO BE IN GETCASES THEREFORE U CANT JUST CHECK IF
+        //GET CASES IS EMPTY OR NOT,
+        try {
+            scope = new Scope(scope);
+            for (int i = 0; i < ast.getCases().size(); i++) {
+                if (!ast.getCases().get(i).getValue().isPresent()) {
+                    continue;
+                }
+                Object condition = requireType(Object.class, visit(ast.getCondition()));
+                Object caseValue = requireType(Object.class, visit(ast.getCases().get(i).getValue().get()));
+                if (condition.equals(caseValue)) {
+                    visit(ast.getCases().get(i)); //if condition == case value, go and enter that case
+                }
+            }
+        } finally {
+            scope = scope.getParent();
+        }
+        return Environment.NIL;
+//        throw new UnsupportedOperationException(); //TODO
+        //each switch has a condition and a list of cases,
+        //each case has a value and a list of statements to do
+
+        //therefore, if the list of cases is not empty,
+        //for each case, check if condition is equal to the value
+        //if it is, you want to execute the statements
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Case ast) {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            scope = new Scope(scope);
+            for (int i = 0; i < ast.getStatements().size(); i++) {
+                visit(ast.getStatements().get(i));
+            }
+        } finally {
+            scope = scope.getParent();
+        }
+        return Environment.NIL;
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     // remeber Boolean by itself is not a class its Declaration for a type
@@ -171,7 +208,9 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Return ast) {
-        throw new UnsupportedOperationException(); //TODO
+        Environment.PlcObject val = visit(ast.getValue());
+        throw new Return(val);
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -293,20 +332,30 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             BigInteger _offset = requireType(BigInteger.class, visit(offset.get()));
             return Environment.create(requireType(List.class, scope.lookupVariable(ast.getName()).getValue())
                     .get(_offset.intValue()));
-        } else if (!offset.isPresent()) { //normal variable
+        } else { //normal variable
             return Environment.create(scope.lookupVariable(ast.getName()).getValue().getValue());
         }
-        throw new UnsupportedOperationException(); //TODO
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        List<Environment.PlcObject> arguments = new ArrayList<Environment.PlcObject>();
+        for (int i = 0; i < ast.getArguments().size(); i++) {
+            arguments.add(visit(ast.getArguments().get(i)));
+        }
+        return Environment.create(scope.lookupFunction(ast.getName(), ast.getArguments().size()).invoke(arguments).getValue());
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.PlcList ast) {
-        throw new UnsupportedOperationException(); //TODO
+        List<Object> expected = new ArrayList<Object>();
+        for (int i = 0; i < ast.getValues().size(); i++) {
+            expected.add(requireType(BigInteger.class, visit(ast.getValues().get(i))));
+        }
+        return Environment.create(expected);
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     /**
@@ -323,7 +372,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     /**
      * Exception class for returning values.
      */
-    private static class Return extends RuntimeException {
+     static class Return extends RuntimeException {
 
         private final Environment.PlcObject value;
 

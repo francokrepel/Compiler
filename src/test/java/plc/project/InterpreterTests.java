@@ -411,7 +411,6 @@ final class InterpreterTests {
     void testListAccessExpression() {
         // list[1]
         List<Object> list = Arrays.asList(BigInteger.ONE, BigInteger.valueOf(5), BigInteger.TEN);
-
         Scope scope = new Scope(null);
         scope.defineVariable("list", true, Environment.create(list));
         test(new Ast.Expression.Access(Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(1))), "list"), BigInteger.valueOf(5), scope);
