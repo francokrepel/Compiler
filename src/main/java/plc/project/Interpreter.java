@@ -6,7 +6,6 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
@@ -306,7 +305,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.PlcList ast) {
-        throw new UnsupportedOperationException(); //TODO
+        List<Ast.Expression> l = ast.getValues();
+        System.out.println(l.get(0).toString());
+
+        Environment.PlcObject o = new Environment.PlcObject(scope, l);
+        return o;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     /**
