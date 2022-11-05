@@ -42,7 +42,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             BigInteger base10 = requireType( //start w this
                     BigInteger.class,
                     Environment.create(args.get(0).getValue() )
-                    );
+            );
             BigInteger base = requireType( //want to shift into this base value
                     BigInteger.class,
                     Environment.create(args.get(1).getValue() )
@@ -69,8 +69,18 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Source ast) {
+        List<Ast.Global> g = ast.getGlobals();
+        List<Ast.Function> f = ast.getFunctions();
 
-        throw new UnsupportedOperationException(); //TODO
+        for (Ast.Global globe : g) {
+            scope.defineVariable(globe.getName(), globe.getMutable(), visit(globe.getValue().get()));
+        }
+
+        for (Ast.Function func : f) {
+            //scope.defineFunction(func.getName(), func.getParameters().size(), );
+        }
+        return Environment.NIL;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -87,7 +97,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             scope.defineVariable(ast.getName(), true, Environment.NIL);
         }
 
-        return Environment.NIL; //TODO
+        return Environment.NIL;
     }
 
     @Override
@@ -98,7 +108,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Expression ast) {
-        throw new UnsupportedOperationException(); //TODO
+        return visit(ast.getExpression());
     }
 
     @Override
@@ -153,7 +163,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
         return Environment.NIL;
 
-  //      throw new UnsupportedOperationException(); //TODO
+        //      throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -243,24 +253,24 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
         // && / ||
         if (visit(ast.getLeft()).getValue() instanceof Boolean) {
-                switch (ast.getOperator()) {
-                    case "&&":
-                        if (!requireType(Boolean.class, visit(ast.getLeft()))) { //if LHS is false, SHORT CIRCUIT FALSE IF LHS FALSE
-                            return Environment.create(false);
-                        } else if (visit(ast.getRight()).getValue() instanceof Boolean
-                                && !requireType(Boolean.class, visit(ast.getRight()))) {
-                            return Environment.create(false);
-                        }
-                        return Environment.create(true);
-                    case "||":
-                        if (requireType(Boolean.class, visit(ast.getLeft()))) { //if LHS is true, SHORT CIRCUIT TRUE IF LHS TRUE
-                            return Environment.create(true);
-                        } else if (requireType(Boolean.class, visit(ast.getRight()))
-                                && visit(ast.getRight()).getValue() instanceof Boolean) {
-                            return Environment.create(true);
-                        }
+            switch (ast.getOperator()) {
+                case "&&":
+                    if (!requireType(Boolean.class, visit(ast.getLeft()))) { //if LHS is false, SHORT CIRCUIT FALSE IF LHS FALSE
                         return Environment.create(false);
-                }
+                    } else if (visit(ast.getRight()).getValue() instanceof Boolean
+                            && !requireType(Boolean.class, visit(ast.getRight()))) {
+                        return Environment.create(false);
+                    }
+                    return Environment.create(true);
+                case "||":
+                    if (requireType(Boolean.class, visit(ast.getLeft()))) { //if LHS is true, SHORT CIRCUIT TRUE IF LHS TRUE
+                        return Environment.create(true);
+                    } else if (requireType(Boolean.class, visit(ast.getRight()))
+                            && visit(ast.getRight()).getValue() instanceof Boolean) {
+                        return Environment.create(true);
+                    }
+                    return Environment.create(false);
+            }
         }
         //  < / > / == / !=
         if (visit(ast.getLeft()).getValue() instanceof Comparable) {
@@ -320,7 +330,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                     return Environment.create(requireType(BigDecimal.class ,visit(ast.getLeft())).multiply(requireType(BigDecimal.class, visit(ast.getRight()))));
                 case "/":
                     return Environment.create(requireType(BigDecimal.class ,visit(ast.getLeft())).divide(requireType(BigDecimal.class, visit(ast.getRight())), RoundingMode.HALF_EVEN));
-                    //it seems that there is no way to do power of two big Decimals
+                //it seems that there is no way to do power of two big Decimals
 //                case "^":
 //                    return Environment.create(requireType(BigDecimal.class ,visit(ast.getLeft())).modPow(requireType(BigDecimal.class,visit(ast.getRight()))));
             }
@@ -356,7 +366,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             arguments.add(visit(ast.getArguments().get(i)));
         }
         return Environment.create(scope.lookupFunction(ast.getName(), ast.getArguments().size()).invoke(arguments).getValue());
-//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -366,7 +375,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             expected.add(requireType(BigInteger.class, visit(ast.getValues().get(i))));
         }
         return Environment.create(expected);
-//        throw new UnsupportedOperationException(); //TODO
     }
 
     /**
@@ -383,7 +391,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     /**
      * Exception class for returning values.
      */
-     static class Return extends RuntimeException {
+    static class Return extends RuntimeException {
 
         private final Environment.PlcObject value;
 
