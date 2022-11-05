@@ -164,7 +164,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Statement.If ast) {
         try {
-            System.out.println(visit(ast.getCondition()));
             if (requireType(Boolean.class, visit(ast.getCondition())).booleanValue()
                     || !requireType(Boolean.class, visit(ast.getCondition())).booleanValue()) {
                 scope = new Scope(scope);
