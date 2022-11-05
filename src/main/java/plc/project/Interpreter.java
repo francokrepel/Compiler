@@ -144,39 +144,41 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         if (ast.getReceiver() instanceof Ast.Expression.Access) {
             String recieverName = ((Ast.Expression.Access) ast.getReceiver()).getName();
             if (((Ast.Expression.Access) ast.getReceiver()).getOffset().isPresent()) { //list
-                // check if its at a valid place in the list
-                //check to make sure its a BigInteger
                 BigInteger offset = (BigInteger) visit(((Ast.Expression.Access) ast.getReceiver()).getOffset().get()).getValue();
                 List<Object> resultList = (List<Object>) scope.lookupVariable(recieverName).getValue().getValue();
-                resultList.set(offset.intValue(), visit(ast.getValue()).getValue());
-                scope.lookupVariable(recieverName).setValue(Environment.create(resultList));
+                if (!(offset.intValue() > resultList.size() - 1 || offset.intValue() < -1)) {
+                    resultList.set(offset.intValue(), visit(ast.getValue()).getValue());
+                    scope.lookupVariable(recieverName).setValue(Environment.create(resultList));
+                } else {
+                    throw new RuntimeException("out of bounds exception");
+                }
             } else {
-                Environment.PlcObject value = visit(ast.getValue());
                 scope.lookupVariable(recieverName).setValue(visit(ast.getValue()));
             }
         } else {
-            throw new UnsupportedOperationException(); //TODO
+            throw new RuntimeException("Reciever not instance of access expression");
         }
         return Environment.NIL;
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.If ast) {
-        if (requireType(Boolean.class, visit(ast.getCondition()))) {
-            scope = new Scope(scope);
-
-            if (requireType(Boolean.class, visit(ast.getCondition())) == true) {
-                ast.getThenStatements().forEach(this::visit);
-            } else if (requireType(Boolean.class, visit(ast.getCondition())) == false) {
-
-                ast.getElseStatements().forEach(this::visit);
+        try {
+            System.out.println(visit(ast.getCondition()));
+            if (requireType(Boolean.class, visit(ast.getCondition())).booleanValue()
+                    || !requireType(Boolean.class, visit(ast.getCondition())).booleanValue()) {
+                scope = new Scope(scope);
+                if (requireType(Boolean.class, visit(ast.getCondition())).booleanValue()) {
+                    ast.getThenStatements().forEach(this::visit);
+                } else if (!requireType(Boolean.class, visit(ast.getCondition())).booleanValue()) {
+                    ast.getElseStatements().forEach(this::visit);
+                }
             }
-            //scope = scope.getParent();
+            //throw new UnsupportedOperationException(); //TODO
+        } finally {
+            scope = scope.getParent();
         }
-
         return Environment.NIL;
-
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -200,12 +202,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         }
         return Environment.NIL;
 //        throw new UnsupportedOperationException(); //TODO
-        //each switch has a condition and a list of cases,
-        //each case has a value and a list of statements to do
-
-        //therefore, if the list of cases is not empty,
-        //for each case, check if condition is equal to the value
-        //if it is, you want to execute the statements
     }
 
     @Override
