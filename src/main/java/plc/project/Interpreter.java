@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -129,13 +130,23 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Assignment ast) {
-//        System.out.println("hi");
-//        requireType(Ast.Expression.Access.class, visit(ast.getReceiver()));
-//        System.out.println("hiii bye");
-//        String recieverName = ast.getReceiver().toString();
-//        Environment.PlcObject value = visit(ast.getValue());
-//        scope.lookupVariable(ast.getReceiver().toString()).setValue(visit(ast.getValue()));
-        throw new UnsupportedOperationException(); //TODO
+        if (ast.getReceiver() instanceof Ast.Expression.Access) {
+            String recieverName = ((Ast.Expression.Access) ast.getReceiver()).getName();
+            if (((Ast.Expression.Access) ast.getReceiver()).getOffset().isPresent()) { //list
+                // check if its at a valid place in the list
+                Object value = visit(ast.getValue()).getValue();
+                //check to make sure its a BigInteger
+                BigInteger offset = (BigInteger) visit(((Ast.Expression.Access) ast.getReceiver()).getOffset().get()).getValue();
+                List<Object> resultList = (List<Object>) scope.lookupVariable(recieverName).getValue().getValue();
+                resultList.set(offset.intValue(), value);
+            } else {
+                Environment.PlcObject value = visit(ast.getValue());
+                scope.lookupVariable(recieverName).setValue(visit(ast.getValue()));
+            }
+        } else {
+            throw new UnsupportedOperationException(); //TODO
+        }
+        return Environment.NIL;
     }
 
     @Override
