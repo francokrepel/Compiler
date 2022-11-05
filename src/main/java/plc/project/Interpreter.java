@@ -76,7 +76,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         }
 
         for (Ast.Function func : f) {
-            //scope.defineFunction(func.getName(), func.getParameters().size(), );
+            //scope.defineFunction(func.getName(), func.getParameters().size(), func.getStatements());
         }
         return Environment.NIL;
         //throw new UnsupportedOperationException(); //TODO
