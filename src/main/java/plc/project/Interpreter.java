@@ -134,11 +134,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             String recieverName = ((Ast.Expression.Access) ast.getReceiver()).getName();
             if (((Ast.Expression.Access) ast.getReceiver()).getOffset().isPresent()) { //list
                 // check if its at a valid place in the list
-                Object value = visit(ast.getValue()).getValue();
                 //check to make sure its a BigInteger
                 BigInteger offset = (BigInteger) visit(((Ast.Expression.Access) ast.getReceiver()).getOffset().get()).getValue();
                 List<Object> resultList = (List<Object>) scope.lookupVariable(recieverName).getValue().getValue();
-                resultList.set(offset.intValue(), value);
+                resultList.set(offset.intValue(), visit(ast.getValue()).getValue());
+                scope.lookupVariable(recieverName).setValue(Environment.create(resultList));
             } else {
                 Environment.PlcObject value = visit(ast.getValue());
                 scope.lookupVariable(recieverName).setValue(visit(ast.getValue()));
