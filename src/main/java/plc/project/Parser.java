@@ -85,8 +85,13 @@ public final class Parser {
      */
     public Ast.Global parseList() throws ParseException {
         List<Ast.Expression> arguments = new ArrayList<Ast.Expression>();
+        String type = "";
         if (match(Token.Type.IDENTIFIER)) {
             String identifier = tokens.get(-1).getLiteral();
+            if (match(":")) {
+                type = tokens.get(0).getLiteral();
+                tokens.advance();
+            }
             if (match("=")) {
                 if (match("[")) {
                     arguments.add(parseExpression());
@@ -94,7 +99,7 @@ public final class Parser {
                         if (peek("]")) { throw new ParseException("Trailing Comma",tokens.get(-1).getIndex()); }
                         arguments.add(parseExpression());
                         if (match("]")) {
-                            return new Ast.Global(identifier, true, Optional.of(new Ast.Expression.PlcList(arguments)));
+                            return new Ast.Global(identifier, type,true, Optional.of(new Ast.Expression.PlcList(arguments)));
                         }
                     }
                 }
@@ -111,10 +116,15 @@ public final class Parser {
         if (match(Token.Type.IDENTIFIER)) {
             String identifier = tokens.get(-1).getLiteral();
             Optional<Ast.Expression> value = Optional.empty();
+            String type = "";
+            if (match(":")) {
+                type = tokens.get(0).getLiteral();
+                tokens.advance();
+            }
             if (match("=")) {
                 value = Optional.of(parseExpression());
             }
-            return new Ast.Global(identifier, true, value);
+            return new Ast.Global(identifier, type,true, value);
         }
         throw new ParseException("parseMutable Exception at ", tokens.get(-1).getIndex());
     }
@@ -126,8 +136,13 @@ public final class Parser {
     public Ast.Global parseImmutable() throws ParseException {
         if (match(Token.Type.IDENTIFIER)) {
             String identifier = tokens.get(-1).getLiteral();
+            String type = "";
+            if (match(":")) {
+                type = tokens.get(0).getLiteral();
+                tokens.advance();
+            }
             if (match("=")) {
-                return new Ast.Global(identifier, false, Optional.of(parseExpression()));
+                return new Ast.Global(identifier, type, false, Optional.of(parseExpression()));
             }
         }
         throw new ParseException("parseImmutable Exception at ", tokens.get(-1).getIndex());
@@ -142,21 +157,37 @@ public final class Parser {
             String name = tokens.get(-1).getLiteral();
             if (match("(")) {
                 List<String> parameters = new ArrayList<String>();
-//                System.out.print(tokens.get(-1).getLiteral());
+                List<String> types = new ArrayList<String>();
+                Optional<String> returnType = Optional.empty();
+
                 if (match(Token.Type.IDENTIFIER)) {
                     parameters.add(tokens.get(-1).getLiteral());
+                    if (match(":")) {
+                        types.add(tokens.get(0).getLiteral());
+                        tokens.advance();
+                    }
                     while (match(",")) {
-                        if (peek(")")) { throw new ParseException("Trailing Comma",tokens.get(-1).getIndex()); }
+                        if (peek(")")) {
+                            throw new ParseException("Trailing Comma",tokens.get(-1).getIndex());
+                        }
                         if (match(Token.Type.IDENTIFIER)) {
                             parameters.add(tokens.get(-1).getLiteral());
+                        }
+                        if (match(":")) {
+                            types.add(tokens.get(0).getLiteral());
+                            tokens.advance();
                         }
                     }
                 }
                 if (match(")")) {
+                    if (match(":")) {
+                        returnType = Optional.of(tokens.get(0).getLiteral());
+                        tokens.advance();
+                    }
                     if (match("DO")) {
                         List<Ast.Statement> statements = parseBlock();
                         if (match("END")) {
-                            return new Ast.Function(name, parameters, statements);
+                            return new Ast.Function(name, parameters, types, returnType, statements);
                         }
                     }
                 }
