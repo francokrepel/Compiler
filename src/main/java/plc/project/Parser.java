@@ -226,14 +226,21 @@ public final class Parser {
 
         String name = tokens.get(-1).getLiteral();
         Optional<Ast.Expression> value = Optional.empty();
+        Optional<String> type = Optional.empty();
 
-        if (match("=")) {
-            value = Optional.of(parseExpression());
+        if (peek("=") || peek(":")) {
+            if (match("=")) {
+                value = Optional.of(parseExpression());
+            } else if (match(":")) {
+                type = Optional.of(tokens.get(0).getLiteral());
+                value = Optional.empty();
+                tokens.advance();
+            }
         }
         if (!match(";")) {
             throw new ParseException("Expected Semicolon", tokens.get(-1).getIndex());
         }
-        return new Ast.Statement.Declaration(name, value);
+        return new Ast.Statement.Declaration(name, type, value);
     }
 
     /**
