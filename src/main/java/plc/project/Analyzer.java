@@ -107,7 +107,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Access ast) {
-        throw new UnsupportedOperationException();  // TODO
+        //ast.setVariable();
+        if (ast.getOffset().get().getType() != Environment.Type.INTEGER) {
+            throw new RuntimeException();
+        }
+        return null;
+
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
@@ -117,11 +123,22 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.PlcList ast) {
-        throw new UnsupportedOperationException();  // TODO
+        for (Ast.Expression e : ast.getValues()) {
+            requireAssignable(ast.getType(), e.getType());
+        }
+        //throw new UnsupportedOperationException();  // TODO
+        return null;
     }
 
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
-        throw new UnsupportedOperationException();  // TODO
+        if (target == Environment.Type.COMPARABLE) {
+            if (type == Environment.Type.BOOLEAN) {
+                throw new RuntimeException();
+            }
+        } else if (target != type) {
+            if (target != Environment.Type.ANY)
+                throw new RuntimeException();
+        }
     }
 
 }
