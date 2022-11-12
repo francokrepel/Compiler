@@ -92,17 +92,91 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Literal ast) {
-        throw new UnsupportedOperationException();  // TODO
+        Object literal = ast.getLiteral();
+        if (literal == "NIL" ) {
+            ast.setType(Environment.Type.NIL);
+        } else if (literal instanceof Boolean) {
+            ast.setType(Environment.Type.BOOLEAN);
+        } else if (literal instanceof  Character) {
+            ast.setType(Environment.Type.CHARACTER);
+        } else if (literal instanceof String) {
+            ast.setType(Environment.Type.STRING);
+        } else if (literal instanceof BigInteger) {
+            BigInteger val = (BigInteger) ast.getLiteral();
+            if (val.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) > 0
+                    || val.compareTo(BigInteger.valueOf(Integer.MIN_VALUE)) < 0) {
+                throw new RuntimeException("Integer size overflow");
+            }
+            ast.setType(Environment.Type.INTEGER);
+        } else if (literal instanceof BigDecimal) {
+            BigDecimal val = (BigDecimal) ast.getLiteral();
+            if (val.doubleValue() == Double.NEGATIVE_INFINITY || val.doubleValue() == Double.POSITIVE_INFINITY || val.doubleValue() < Double
+                    .MIN_VALUE) { //DOUBLE CHECK THIS ONE
+                throw new RuntimeException("Decimal size overflow");
+            }
+            ast.setType(Environment.Type.DECIMAL);
+        }
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Group ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getExpression() instanceof Ast.Expression.Binary) {
+            visit(ast.getExpression());
+            ast.setType(ast.getExpression().getType());
+            return null;
+        }
+        throw new RuntimeException("Expression is not instanceof Binary Expression");
     }
 
     @Override
     public Void visit(Ast.Expression.Binary ast) {
-        throw new UnsupportedOperationException();  // TODO
+        Ast.Expression lhs = ast.getLeft();
+        visit(lhs);
+        Ast.Expression rhs = ast.getRight();
+        visit(rhs);
+        switch (ast.getOperator()) {
+            case "&&": case "||":
+                if (lhs.getType() == Environment.Type.BOOLEAN && rhs.getType() == Environment.Type.BOOLEAN) {
+                    ast.setType(Environment.Type.BOOLEAN);
+                    return null;
+                }
+                throw new RuntimeException("Expected two Booleans");
+            case "<": case ">": case "==": case "!=":
+                if (lhs.getType() == Environment.Type.COMPARABLE && rhs.getType() == Environment.Type.COMPARABLE) {
+                    ast.setType(Environment.Type.COMPARABLE);
+                    return null;
+                }
+                throw new RuntimeException("Expected two Comparable types");
+            case "+":
+                if (lhs.getType() == Environment.Type.STRING || rhs.getType() == Environment.Type.STRING) {
+                    ast.setType(Environment.Type.STRING);
+                    return null;
+                } else if (lhs.getType() == Environment.Type.INTEGER && rhs.getType() == Environment.Type.INTEGER) {
+                    ast.setType(Environment.Type.INTEGER);
+                    return null;
+                } else if (lhs.getType() == Environment.Type.DECIMAL && rhs.getType() == Environment.Type.DECIMAL) {
+                    ast.setType(Environment.Type.DECIMAL);
+                    return null;
+                }
+                throw new RuntimeException("Expected two Integers, two Decimals, or at least one String");
+            case "-": case "*": case "/":
+                if (lhs.getType() == Environment.Type.INTEGER && rhs.getType() == Environment.Type.INTEGER) {
+                    ast.setType(Environment.Type.INTEGER);
+                    return null;
+                } else if (lhs.getType() == Environment.Type.DECIMAL && rhs.getType() == Environment.Type.DECIMAL) {
+                    ast.setType(Environment.Type.DECIMAL);
+                    return null;
+                }
+                throw new RuntimeException("Expected two Integers or two Decimals");
+            case "^":
+                if (lhs.getType() == Environment.Type.INTEGER && rhs.getType() == Environment.Type.INTEGER) {
+                    ast.setType(Environment.Type.INTEGER);
+                    return null;
+                }
+                throw new RuntimeException("Expected two Integers");
+        }
+        throw new RuntimeException("uh oh spaghettio");
     }
 
     @Override
