@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 /**
@@ -181,18 +182,27 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Access ast) {
-        //ast.setVariable();
-        if (ast.getOffset().get().getType() != Environment.Type.INTEGER) {
-            throw new RuntimeException();
-        }
+        ast.setVariable(scope.lookupVariable(ast.getName()));
+        try {
+            if (ast.getOffset().get().getType() != Environment.Type.INTEGER) {
+                throw new RuntimeException();
+            }
+        } catch (NoSuchElementException e) {}
         return null;
-
-        //throw new UnsupportedOperationException();  // TODO
+        // TODO
     }
 
     @Override
     public Void visit(Ast.Expression.Function ast) {
-        throw new UnsupportedOperationException();  // TODO
+        Environment.Function f = scope.lookupFunction(ast.getName(), ast.getArguments().size());
+        ast.setFunction(f);
+
+        for (int i = 0; i < f.getParameterTypes().size(); i++) {
+            requireAssignable(ast.getArguments().get(i).getType(), f.getParameterTypes().get(i));
+        }
+
+        return null;
+        // TODO
     }
 
     @Override
