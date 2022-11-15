@@ -62,12 +62,42 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Switch ast) {
-        throw new UnsupportedOperationException();  // TODO
+        visit(ast.getCondition());
+
+        for (int i = 0; i < ast.getCases().size(); i++) {
+            requireAssignable(ast.getCondition().getType(), ast.getCases().get(i).getValue().get().getType());
+        }
+
+        if (ast.getCases().get(ast.getCases().size()).getValue().get().getType() != null) {
+            throw new RuntimeException();
+        }
+
+        try {
+            for (Ast.Statement.Case c : ast.getCases()) {
+                scope = new Scope(scope);
+                visit(c);
+            }
+        } finally {
+            scope = scope.getParent();
+        }
+        return null;
+
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
     public Void visit(Ast.Statement.Case ast) {
-        throw new UnsupportedOperationException();  // TODO
+        //visit(ast.getValue());
+        try {
+            scope = new Scope(scope);
+            for (Ast.Statement stmt : ast.getStatements()) {
+                visit(stmt);
+            }
+        } finally {
+            scope = scope.getParent();
+        }
+        return null;
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
@@ -83,11 +113,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
             scope = scope.getParent();
         }
         return null;
-//        throw new UnsupportedOperationException();  // TODO
+        // TODO
     }
 
     @Override
     public Void visit(Ast.Statement.Return ast) {
+        //Needs to be worked on with visit(Ast.Function ast)
         throw new UnsupportedOperationException();  // TODO
     }
 
