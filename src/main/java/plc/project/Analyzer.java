@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -42,7 +43,11 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Expression ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if ( !(ast.getExpression() instanceof Ast.Expression.Function))  {
+            throw new RuntimeException("Expression is not of type Function");  // TODO
+        }
+        visit(ast.getExpression());
+        return null;
     }
 
     @Override
@@ -62,42 +67,37 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Switch ast) {
-        visit(ast.getCondition());
-
-        for (int i = 0; i < ast.getCases().size(); i++) {
-            requireAssignable(ast.getCondition().getType(), ast.getCases().get(i).getValue().get().getType());
-        }
-
-        if (ast.getCases().get(ast.getCases().size()).getValue().get().getType() != null) {
-            throw new RuntimeException();
-        }
-
         try {
-            for (Ast.Statement.Case c : ast.getCases()) {
-                scope = new Scope(scope);
-                visit(c);
+            visit(ast.getCondition());
+            scope = new Scope(scope);
+            for (int i = 0; i < ast.getCases().size() - 1; i++) { // - 1 as we have a default last
+//                System.out.println(ast.getCondition().getType().getJvmName());
+                visit(ast.getCases().get(i));
+                requireAssignable(ast.getCondition().getType(), ast.getCases().get(i).getValue().get().getType());
             }
+            Ast.Statement.Case defaultCase = ast.getCases().get(ast.getCases().size()-1);
+            if ( !(defaultCase.getValue().isPresent() && defaultCase.getValue().get().getType() != null) ) {
+                throw new RuntimeException("Exception at Default Case");
+            }
+            visit(defaultCase);
         } finally {
             scope = scope.getParent();
         }
         return null;
-
-        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
     public Void visit(Ast.Statement.Case ast) {
-        //visit(ast.getValue());
         try {
             scope = new Scope(scope);
-            for (Ast.Statement stmt : ast.getStatements()) {
-                visit(stmt);
+            for (int i = 0; i < ast.getStatements().size(); i++) {
+                visit(ast.getStatements().get(i));
             }
         } finally {
             scope = scope.getParent();
         }
         return null;
-        //throw new UnsupportedOperationException();  // TODO
+//        throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
@@ -113,12 +113,11 @@ public final class Analyzer implements Ast.Visitor<Void> {
             scope = scope.getParent();
         }
         return null;
-        // TODO
+//        throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
     public Void visit(Ast.Statement.Return ast) {
-        //Needs to be worked on with visit(Ast.Function ast)
         throw new UnsupportedOperationException();  // TODO
     }
 
@@ -184,22 +183,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 if (lhs.getType() == Environment.Type.STRING || rhs.getType() == Environment.Type.STRING) {
                     ast.setType(Environment.Type.STRING);
                     return null;
-                } else if (lhs.getType() == Environment.Type.INTEGER && rhs.getType() == Environment.Type.INTEGER) {
-                    ast.setType(Environment.Type.INTEGER);
-                    return null;
-                } else if (lhs.getType() == Environment.Type.DECIMAL && rhs.getType() == Environment.Type.DECIMAL) {
-                    ast.setType(Environment.Type.DECIMAL);
-                    return null;
+                } else {
+                    if (IntegersOrDecimals(ast, lhs, rhs)) return null;
                 }
                 throw new RuntimeException("Expected two Integers, two Decimals, or at least one String");
             case "-": case "*": case "/":
-                if (lhs.getType() == Environment.Type.INTEGER && rhs.getType() == Environment.Type.INTEGER) {
-                    ast.setType(Environment.Type.INTEGER);
-                    return null;
-                } else if (lhs.getType() == Environment.Type.DECIMAL && rhs.getType() == Environment.Type.DECIMAL) {
-                    ast.setType(Environment.Type.DECIMAL);
-                    return null;
-                }
+                if (IntegersOrDecimals(ast, lhs, rhs)) return null;
                 throw new RuntimeException("Expected two Integers or two Decimals");
             case "^":
                 if (lhs.getType() == Environment.Type.INTEGER && rhs.getType() == Environment.Type.INTEGER) {
@@ -211,14 +200,25 @@ public final class Analyzer implements Ast.Visitor<Void> {
         throw new RuntimeException("uh oh spaghettio");
     }
 
+    private boolean IntegersOrDecimals(Ast.Expression.Binary ast, Ast.Expression lhs, Ast.Expression rhs) {
+        if (lhs.getType() == Environment.Type.INTEGER && rhs.getType() == Environment.Type.INTEGER) {
+            ast.setType(Environment.Type.INTEGER);
+            return true;
+        } else if (lhs.getType() == Environment.Type.DECIMAL && rhs.getType() == Environment.Type.DECIMAL) {
+            ast.setType(Environment.Type.DECIMAL);
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public Void visit(Ast.Expression.Access ast) {
         ast.setVariable(scope.lookupVariable(ast.getName()));
-        try {
+        if (ast.getOffset().isPresent()) {
             if (ast.getOffset().get().getType() != Environment.Type.INTEGER) {
-                throw new RuntimeException();
+                throw new RuntimeException("offset is not of Integer type");
             }
-        } catch (NoSuchElementException e) {}
+        }
         return null;
         // TODO
     }
