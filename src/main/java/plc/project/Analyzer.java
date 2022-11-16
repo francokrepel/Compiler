@@ -52,12 +52,43 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
+
+        if (!ast.getTypeName().isPresent() && !ast.getValue().isPresent()) {
+            throw new RuntimeException("Declaration statement must have type or value:");
+        }
+        Environment.Type type = null;
+        if (ast.getTypeName().isPresent()) {
+            type = Environment.getType(ast.getTypeName().get());
+        }
+        if (ast.getValue().isPresent()) {
+            visit(ast.getValue().get());
+
+            if (type == null) {
+                type = ast.getValue().get().getType();
+            }
+
+            requireAssignable(type, ast.getValue().get().getType());
+        }
+//        scope.defineVariable();
+        ast.setVariable(scope.defineVariable(ast.getName(),
+                                            ast.getName(),
+                                            type,
+                                            true,
+                                            Environment.NIL
+                ));
         throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (!(ast.getReceiver() instanceof Ast.Expression.Access)) {
+            throw new RuntimeException("receiver is not an access expression ");
+        }
+        visit(ast.getReceiver());
+        visit(ast.getValue());
+        requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
+        return null;
+//        throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
@@ -71,15 +102,14 @@ public final class Analyzer implements Ast.Visitor<Void> {
             visit(ast.getCondition());
             scope = new Scope(scope);
             for (int i = 0; i < ast.getCases().size() - 1; i++) { // - 1 as we have a default last
-//                System.out.println(ast.getCondition().getType().getJvmName());
-                visit(ast.getCases().get(i));
+                visit(ast.getCases().get(i).getValue().get());
                 requireAssignable(ast.getCondition().getType(), ast.getCases().get(i).getValue().get().getType());
             }
             Ast.Statement.Case defaultCase = ast.getCases().get(ast.getCases().size()-1);
-            if ( !(defaultCase.getValue().isPresent() && defaultCase.getValue().get().getType() != null) ) {
+            visit(defaultCase);
+            if (defaultCase.getValue().isPresent() ) {
                 throw new RuntimeException("Exception at Default Case");
             }
-            visit(defaultCase);
         } finally {
             scope = scope.getParent();
         }
@@ -226,12 +256,14 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Expression.Function ast) {
         Environment.Function f = scope.lookupFunction(ast.getName(), ast.getArguments().size());
-        ast.setFunction(f);
-
-        for (int i = 0; i < f.getParameterTypes().size(); i++) {
-            requireAssignable(ast.getArguments().get(i).getType(), f.getParameterTypes().get(i));
+        for (int i = 0; i < ast.getArguments().size(); i++) {
+            visit(ast.getArguments().get(i));
+            System.out.println(ast.getArguments().get(i).getType());
+            System.out.println(f.getParameterTypes().get(i));
+            requireAssignable(f.getParameterTypes().get(i), ast.getArguments().get(i).getType());
         }
-
+        ast.setFunction(f);
+        ast.setFunction(ast.getFunction());
         return null;
         // TODO
     }
@@ -246,14 +278,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
     }
 
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
-        if (target == Environment.Type.COMPARABLE) {
-            if (type == Environment.Type.BOOLEAN) {
-                throw new RuntimeException();
+            if (target == Environment.Type.COMPARABLE) {
+                if (type == Environment.Type.BOOLEAN) {
+                    throw new RuntimeException();
+                }
+            } else if (target != type) {
+                if (target != Environment.Type.ANY)
+                    throw new RuntimeException();
             }
-        } else if (target != type) {
-            if (target != Environment.Type.ANY)
-                throw new RuntimeException();
-        }
     }
-
 }
