@@ -28,7 +28,23 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        throw new UnsupportedOperationException();  // TODO
+        Ast.Function main = null;
+        for (Ast.Global g : ast.getGlobals()) {
+            visit(g);
+        }
+        for (Ast.Function f : ast.getFunctions()) {
+            if (f.getName().equals("main")) {
+                main = f;
+            }
+        }
+        if (main == null || main.getParameters().size() != 0 ||!main.getReturnTypeName().equals("Integer")) {
+            throw new RuntimeException();
+        }
+        for (Ast.Function f : ast.getFunctions()) {
+            visit(f);
+        }
+        return null;
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
@@ -116,16 +132,17 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public Void visit(Ast.Statement.Switch ast) {
         try {
             visit(ast.getCondition());
-            scope = new Scope(scope);
+            //scope = new Scope(scope);
             for (int i = 0; i < ast.getCases().size() - 1; i++) { // - 1 as we have a default last
+                scope = new Scope(scope);
                 visit(ast.getCases().get(i).getValue().get());
                 requireAssignable(ast.getCondition().getType(), ast.getCases().get(i).getValue().get().getType());
             }
             Ast.Statement.Case defaultCase = ast.getCases().get(ast.getCases().size()-1);
-            visit(defaultCase);
             if (defaultCase.getValue().isPresent() ) {
                 throw new RuntimeException("Exception at Default Case");
             }
+            visit(defaultCase);
         } finally {
             scope = scope.getParent();
         }
