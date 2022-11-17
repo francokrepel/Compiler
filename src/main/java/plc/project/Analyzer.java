@@ -70,13 +70,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
             requireAssignable(type, ast.getValue().get().getType());
         }
 //        scope.defineVariable();
-        ast.setVariable(scope.defineVariable(ast.getName(),
-                                            ast.getName(),
-                                            type,
-                                            true,
-                                            Environment.NIL
-                ));
-        throw new UnsupportedOperationException();  // TODO
+        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), type, true, Environment.NIL));
+        return null;
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
