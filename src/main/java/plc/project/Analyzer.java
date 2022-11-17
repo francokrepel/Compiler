@@ -95,6 +95,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public Void visit(Ast.Statement.If ast) {
         visit(ast.getCondition());
         requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
+        if (ast.getThenStatements().isEmpty()) {
+            throw new RuntimeException();
+        }
         try {
             scope = new Scope(scope);
             for (Ast.Statement stmt : ast.getThenStatements()) {
