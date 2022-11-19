@@ -16,6 +16,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     public Scope scope;
     private Ast.Function function;
+    public Environment.Type returnType;
 
     public Analyzer(Scope parent) {
         scope = new Scope(parent);
@@ -37,7 +38,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 main = f;
             }
         }
-        if (main == null || main.getParameters().size() != 0 ||!main.getReturnTypeName().equals("Integer")) {
+        if (main == null || main.getParameters().size() != 0 || !main.getReturnTypeName().equals("Integer")) {
             throw new RuntimeException();
         }
         for (Ast.Function f : ast.getFunctions()) {
@@ -60,7 +61,32 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Function ast) {
-        throw new UnsupportedOperationException();  // TODO
+        List<Environment.Type> paramTypes = null;
+        for (String s : ast.getParameterTypeNames()) {
+            paramTypes.add(Environment.getType(s));
+        }
+
+        ast.setFunction(scope.defineFunction(ast.getName(), ast.getName(), paramTypes, Environment.getType(ast.getReturnTypeName().get()), args -> Environment.NIL));
+
+        try {
+            scope = new Scope(scope);
+//            for (String s : ast.getParameters()) {
+//                scope.defineVariable(s, true, ast.get);
+//            }
+            int i;
+            for (i = 0; i < ast.getStatements().size(); i++) {
+                visit(ast.getStatements().get(i));
+            }
+            returnType = Environment.getType(ast.getReturnTypeName().get());
+//            i++;
+//            returnType = ast.getStatements().get(i).
+
+        } finally {
+            scope = scope.getParent();
+        }
+
+        return null;
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
@@ -187,7 +213,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Return ast) {
-        throw new UnsupportedOperationException();  // TODO
+        requireAssignable(returnType, ast.getValue().getType());
+        return null;
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
