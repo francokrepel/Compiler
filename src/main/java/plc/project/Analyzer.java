@@ -77,8 +77,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 visit(ast.getStatements().get(i));
             }
             returnType = Environment.getType(ast.getReturnTypeName().get());
-//            i++;
-//            returnType = ast.getStatements().get(i).
 
         } finally {
             scope = scope.getParent();
@@ -161,21 +159,41 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Switch ast) {
+
+        visit(ast.getCondition());
+        for (int i = 0; i < ast.getCases().size() - 1; i++) {
+            requireAssignable(ast.getCondition().getType(), ast.getCases().get(i).getValue().get().getType());
+        }
+        if (ast.getCases().get(ast.getCases().size()).getValue().isPresent()) {
+            throw new RuntimeException();
+        }
+
         try {
-            scope = new Scope(scope);
-            visit(ast.getCondition());
-            for (int i = 0; i < ast.getCases().size() - 1; i++) { // - 1 as we have a default last
-                visit(ast.getCases().get(i).getValue().get());
-                requireAssignable(ast.getCondition().getType(), ast.getCases().get(i).getValue().get().getType());
-            }
-            Ast.Statement.Case defaultCase = ast.getCases().get(ast.getCases().size()-1);
-            visit(defaultCase);
-            if (defaultCase.getValue().isPresent() ) {
-                throw new RuntimeException("Exception at Default Case");
+            for (Ast.Statement.Case c : ast.getCases()) {
+                scope = new Scope(scope);
+                visit(c);
             }
         } finally {
             scope = scope.getParent();
         }
+
+
+
+//        try {
+//            scope = new Scope(scope);
+//            visit(ast.getCondition());
+//            for (int i = 0; i < ast.getCases().size() - 1; i++) { // - 1 as we have a default last
+//                visit(ast.getCases().get(i).getValue().get());
+//                requireAssignable(ast.getCondition().getType(), ast.getCases().get(i).getValue().get().getType());
+//            }
+//            Ast.Statement.Case defaultCase = ast.getCases().get(ast.getCases().size()-1);
+//            visit(defaultCase);
+//            if (defaultCase.getValue().isPresent() ) {
+//                throw new RuntimeException("Exception at Default Case");
+//            }
+//        } finally {
+//            scope = scope.getParent();
+//        }
         return null;
     }
 
