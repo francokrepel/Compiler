@@ -16,6 +16,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     public Scope scope;
     private Ast.Function function;
+    public Environment.Type returnType;
 
     public Analyzer(Scope parent) {
         scope = new Scope(parent);
@@ -28,17 +29,64 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        throw new UnsupportedOperationException();  // TODO
+        Ast.Function main = null;
+        for (Ast.Global g : ast.getGlobals()) {
+            visit(g);
+        }
+        for (Ast.Function f : ast.getFunctions()) {
+            if (f.getName().equals("main")) {
+                main = f;
+            }
+        }
+        if (main == null || main.getParameters().size() != 0 || !main.getReturnTypeName().equals("Integer")) {
+            throw new RuntimeException();
+        }
+        for (Ast.Function f : ast.getFunctions()) {
+            visit(f);
+        }
+        return null;
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
     public Void visit(Ast.Global ast) {
-        throw new UnsupportedOperationException();  // TODO
+        requireAssignable(Environment.getType(ast.getTypeName()), ast.getValue().get().getType());
+        visit(ast.getValue().get());
+        scope.defineVariable(ast.getName(), ast.getName(), Environment.getType(ast.getTypeName()), ast.getMutable(), Environment.NIL);
+        return null;
+
+
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
     public Void visit(Ast.Function ast) {
-        throw new UnsupportedOperationException();  // TODO
+        List<Environment.Type> paramTypes = null;
+        for (String s : ast.getParameterTypeNames()) {
+            paramTypes.add(Environment.getType(s));
+        }
+
+        ast.setFunction(scope.defineFunction(ast.getName(), ast.getName(), paramTypes, Environment.getType(ast.getReturnTypeName().get()), args -> Environment.NIL));
+
+        try {
+            scope = new Scope(scope);
+//            for (String s : ast.getParameters()) {
+//                scope.defineVariable(s, true, ast.get);
+//            }
+            int i;
+            for (i = 0; i < ast.getStatements().size(); i++) {
+                visit(ast.getStatements().get(i));
+            }
+            returnType = Environment.getType(ast.getReturnTypeName().get());
+//            i++;
+//            returnType = ast.getStatements().get(i).
+
+        } finally {
+            scope = scope.getParent();
+        }
+
+        return null;
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
@@ -70,13 +118,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
             requireAssignable(type, ast.getValue().get().getType());
         }
 //        scope.defineVariable();
-        ast.setVariable(scope.defineVariable(ast.getName(),
-                                            ast.getName(),
-                                            type,
-                                            true,
-                                            Environment.NIL
-                ));
-        throw new UnsupportedOperationException();  // TODO
+        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), type, true, Environment.NIL));
+        return null;
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
@@ -93,7 +137,27 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.If ast) {
-        throw new UnsupportedOperationException();  // TODO
+        visit(ast.getCondition());
+        requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
+        if (ast.getThenStatements().isEmpty()) {
+            throw new RuntimeException();
+        }
+        try {
+            scope = new Scope(scope);
+            for (Ast.Statement stmt : ast.getThenStatements()) {
+                visit(stmt);
+            }
+
+            scope = new Scope(scope);
+            for (Ast.Statement stmt : ast.getElseStatements()) {
+                visit(stmt);
+            }
+        } finally {
+            scope = scope.getParent();
+        }
+        return null;
+
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
@@ -148,7 +212,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Return ast) {
-        throw new UnsupportedOperationException();  // TODO
+        requireAssignable(returnType, ast.getValue().getType());
+        return null;
+        //throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
