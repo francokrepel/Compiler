@@ -99,8 +99,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Statement.Switch ast) {
         try {
-            visit(ast.getCondition());
             scope = new Scope(scope);
+            visit(ast.getCondition());
             for (int i = 0; i < ast.getCases().size() - 1; i++) { // - 1 as we have a default last
                 visit(ast.getCases().get(i).getValue().get());
                 requireAssignable(ast.getCondition().getType(), ast.getCases().get(i).getValue().get().getType());
@@ -193,8 +193,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Expression.Binary ast) {
         Ast.Expression lhs = ast.getLeft();
-        visit(lhs);
         Ast.Expression rhs = ast.getRight();
+        visit(lhs);
         visit(rhs);
         switch (ast.getOperator()) {
             case "&&": case "||":
@@ -230,6 +230,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         throw new RuntimeException("uh oh spaghettio");
     }
 
+    //helper method for binary
     private boolean IntegersOrDecimals(Ast.Expression.Binary ast, Ast.Expression lhs, Ast.Expression rhs) {
         if (lhs.getType() == Environment.Type.INTEGER && rhs.getType() == Environment.Type.INTEGER) {
             ast.setType(Environment.Type.INTEGER);
@@ -258,14 +259,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Environment.Function f = scope.lookupFunction(ast.getName(), ast.getArguments().size());
         for (int i = 0; i < ast.getArguments().size(); i++) {
             visit(ast.getArguments().get(i));
-            System.out.println(ast.getArguments().get(i).getType());
-            System.out.println(f.getParameterTypes().get(i));
+//            System.out.println(ast.getArguments().get(i).getType());
+//            System.out.println(f.getParameterTypes().get(i));
             requireAssignable(f.getParameterTypes().get(i), ast.getArguments().get(i).getType());
         }
         ast.setFunction(f);
         ast.setFunction(ast.getFunction());
         return null;
-        // TODO
     }
 
     @Override
