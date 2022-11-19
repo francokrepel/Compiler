@@ -2,10 +2,7 @@ package plc.project;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -61,7 +58,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Function ast) {
-        List<Environment.Type> paramTypes = null;
+        List<Environment.Type> paramTypes = new ArrayList<>();
         for (String s : ast.getParameterTypeNames()) {
             paramTypes.add(Environment.getType(s));
         }
