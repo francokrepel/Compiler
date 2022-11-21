@@ -180,7 +180,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
 
 //        try {
-//            scope = new Scope(scope);
+////            scope = new Scope(scope);
 //            visit(ast.getCondition());
 //            for (int i = 0; i < ast.getCases().size() - 1; i++) { // - 1 as we have a default last
 //                visit(ast.getCases().get(i).getValue().get());
