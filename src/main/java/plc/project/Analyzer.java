@@ -155,23 +155,20 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Switch ast) {
-
-        visit(ast.getCondition());
-        for (int i = 0; i < ast.getCases().size() - 1; i++) {
-            requireAssignable(ast.getCondition().getType(), ast.getCases().get(i).getValue().get().getType());
-        }
-        if (ast.getCases().get(ast.getCases().size()).getValue().isPresent()) {
+        if (ast.getCases().get(ast.getCases().size()-1).getValue().isPresent()) {
             throw new RuntimeException();
         }
 
-        try {
-            for (Ast.Statement.Case c : ast.getCases()) {
-                scope = new Scope(scope);
-                visit(c);
-            }
-        } finally {
-            scope = scope.getParent();
+        visit(ast.getCondition());
+
+
+        for (int i = 0; i < ast.getCases().size() - 1; i++) {
+            visit(ast.getCases().get(i).getValue().get());
+            visit(ast.getCases().get(i));
+            requireAssignable(ast.getCondition().getType(), ast.getCases().get(i).getValue().get().getType());
         }
+        visit(ast.getCases().get(ast.getCases().size()-1));
+
 
 
 
