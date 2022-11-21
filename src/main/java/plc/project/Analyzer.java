@@ -69,14 +69,11 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         try {
             scope = new Scope(scope);
-//            for (String s : ast.getParameters()) {
-//                scope.defineVariable(s, true, ast.get);
-//            }
+            returnType = Environment.getType(ast.getReturnTypeName().get());
             int i;
             for (i = 0; i < ast.getStatements().size(); i++) {
                 visit(ast.getStatements().get(i));
             }
-            returnType = Environment.getType(ast.getReturnTypeName().get());
 
         } finally {
             scope = scope.getParent();
@@ -229,6 +226,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Return ast) {
+        visit(ast.getValue());
         requireAssignable(returnType, ast.getValue().getType());
         return null;
         //throw new UnsupportedOperationException();  // TODO
