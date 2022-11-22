@@ -1,6 +1,7 @@
 package plc.project;
 
 import java.io.PrintWriter;
+import java.util.Optional;
 
 public final class Generator implements Ast.Visitor<Void> {
 
@@ -40,77 +41,250 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        writer.write(ast.getFunction().getJvmName() + " " + ast.getFunction().getName() + "(");
+
+        if (ast.getParameters().size() == 1) {
+            writer.write(ast.getParameterTypeNames().get(0) + " " + ast.getParameters().get(0));
+        } else {
+            for (int i = 0; i < ast.getParameters().size()-1; i++) {
+                writer.write(ast.getParameterTypeNames().get(0) + " " + ast.getParameters().get(0));
+                writer.write(", ");
+            }
+            writer.write(ast.getParameterTypeNames().get(ast.getParameters().size()-1) + " " + ast.getParameters().get(0));
+        }
+        writer.write(") {");
+
+        if (ast.getStatements().isEmpty()) {
+            writer.write("}");
+        } else {
+            for (Ast.Statement s : ast.getStatements()) {
+                newline(1);
+                visit(s);
+            }
+            newline(0);
+            writer.write("}");
+        }
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Statement.Expression ast) {
-        throw new UnsupportedOperationException(); //TODO
+        visit(ast.getExpression());
+        writer.write(";");
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
-        throw new UnsupportedOperationException(); //TODO
+        writer.write(ast.getVariable().getType().getJvmName() + " " + ast.getName());
+        if (ast.getValue().isPresent()) {
+            writer.write(" = ");
+            visit(ast.getValue().get());
+        }
+        writer.write(";");
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
-        throw new UnsupportedOperationException(); //TODO
+        visit(ast.getReceiver());
+        writer.write(" = ");
+        visit(ast.getValue());
+        writer.write(";");
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Statement.If ast) {
-        throw new UnsupportedOperationException(); //TODO
+        writer.write("if (");
+        visit(ast.getCondition());
+        writer.write(") {");
+        for (Ast.Statement s : ast.getThenStatements()) {
+            newline(1);
+            visit(s);
+        }
+        newline(0);
+        writer.write("}");
+
+        if (!ast.getElseStatements().isEmpty()) {
+            writer.write(" else {");
+            for (Ast.Statement s : ast.getElseStatements()) {
+                newline(1);
+                visit(s);
+            }
+            newline(0);
+            writer.write("}");
+        }
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Statement.Switch ast) {
-        throw new UnsupportedOperationException(); //TODO
+        writer.write("switch (");
+        visit(ast.getCondition());
+        writer.write(") {");
+
+        newline(1);
+        for (Ast.Statement.Case c : ast.getCases()) {
+            visit(c);
+        }
+
+        newline(0);
+        writer.write("}");
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Statement.Case ast) {
-        throw new UnsupportedOperationException(); //TODO
+        //System.out.println(ast.getValue().get().getType().);
+        if (ast.getValue().equals(Optional.empty())) {
+            newline(1);
+            writer.write("default:");
+            for (Ast.Statement s : ast.getStatements()) {
+                newline(2);
+                visit(s);
+            }
+        } else {
+            writer.write("case ");
+            visit(ast.getValue().get());
+            writer.write(":");
+            for (Ast.Statement s : ast.getStatements()) {
+                newline(2);
+                visit(s);
+            }
+        }
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Statement.While ast) {
-        throw new UnsupportedOperationException(); //TODO
+        writer.write("while (");
+        visit(ast.getCondition());
+        writer.write(") {");
+
+        if (ast.getStatements().isEmpty()) {
+            writer.write("}");
+        } else {
+            for (Ast.Statement s : ast.getStatements()) {
+                newline(1);
+                visit(s);
+                writer.write(";");
+            }
+            newline(0);
+            writer.write("}");
+        }
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Statement.Return ast) {
-        throw new UnsupportedOperationException(); //TODO
+        writer.write("return ");
+        visit(ast.getValue());
+        writer.write(";");
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Expression.Literal ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if (ast.getType().equals(Environment.Type.CHARACTER)) {
+            writer.write("\'");
+            writer.write(ast.getLiteral().toString());
+            writer.write("\'");
+        } else if (ast.getType().equals(Environment.Type.STRING)) {
+            writer.write("\"");
+            writer.write(ast.getLiteral().toString());
+            writer.write("\"");
+        } else {
+            writer.write(ast.getLiteral().toString());
+        }
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Expression.Group ast) {
-        throw new UnsupportedOperationException(); //TODO
+        writer.write("(");
+        visit(ast.getExpression());
+        writer.write(")");
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Expression.Binary ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if (ast.getOperator().equals("^")) {
+            writer.write("Math.pow(");
+            visit(ast.getLeft());
+            writer.write(", ");
+            visit(ast.getRight());
+            writer.write(")");
+        } else {
+            visit(ast.getLeft());
+            writer.write(" ");
+            writer.write(ast.getOperator() + " ");
+            visit(ast.getRight());
+        }
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Expression.Access ast) {
-        throw new UnsupportedOperationException(); //TODO
+
+        if (ast.getOffset().isPresent()) {
+            writer.write(ast.getVariable().getJvmName() + "[");
+            writer.write(ast.getOffset().get() + "]");
+        } else {
+            writer.write(ast.getVariable().getJvmName());
+        }
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Expression.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        writer.write(ast.getFunction().getJvmName());
+        writer.write("(");
+        if (ast.getArguments().size() == 1) {
+            visit(ast.getArguments().get(0));
+            writer.write(")");
+        } else {
+            for (int i = 0; i < ast.getArguments().size()-1; i++) {
+                visit(ast.getArguments().get(i));
+                writer.write(", ");
+            }
+            visit(ast.getArguments().get(ast.getArguments().size()-1));
+            writer.write(")");
+        }
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Void visit(Ast.Expression.PlcList ast) {
-        throw new UnsupportedOperationException(); //TODO
+        writer.write("[");
+        if (ast.getValues().size() == 1) {
+            visit(ast.getValues().get(0));
+            writer.write("]");
+        } else {
+            for (int i = 0; i < ast.getValues().size()-1; i++) {
+                visit(ast.getValues().get(i));
+                writer.write(", ");
+            }
+            visit(ast.getValues().get(ast.getValues().size()-1));
+            writer.write("]");
+        }
+        return null;
+        //throw new UnsupportedOperationException(); //TODO
     }
 
 }
