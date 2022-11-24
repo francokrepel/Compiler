@@ -119,7 +119,6 @@ public final class Generator implements Ast.Visitor<Void> {
         visit(ast.getExpression());
         writer.write(";");
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -131,7 +130,6 @@ public final class Generator implements Ast.Visitor<Void> {
         }
         writer.write(";");
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -141,7 +139,6 @@ public final class Generator implements Ast.Visitor<Void> {
         visit(ast.getValue());
         writer.write(";");
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -166,7 +163,6 @@ public final class Generator implements Ast.Visitor<Void> {
             writer.write("}");
         }
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -221,7 +217,6 @@ public final class Generator implements Ast.Visitor<Void> {
             for (Ast.Statement s : ast.getStatements()) {
                 newline(1);
                 visit(s);
-                writer.write(";");
             }
             newline(0);
             writer.write("}");
@@ -236,7 +231,6 @@ public final class Generator implements Ast.Visitor<Void> {
         visit(ast.getValue());
         writer.write(";");
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -253,7 +247,6 @@ public final class Generator implements Ast.Visitor<Void> {
             writer.write(ast.getLiteral().toString());
         }
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -262,7 +255,6 @@ public final class Generator implements Ast.Visitor<Void> {
         visit(ast.getExpression());
         writer.write(")");
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -280,7 +272,6 @@ public final class Generator implements Ast.Visitor<Void> {
             visit(ast.getRight());
         }
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -288,7 +279,8 @@ public final class Generator implements Ast.Visitor<Void> {
 
         if (ast.getOffset().isPresent()) {
             writer.write(ast.getVariable().getJvmName() + "[");
-            writer.write(ast.getOffset().get() + "]");
+            print(ast.getOffset().get()); //this might still be wrong
+            writer.write("]");
         } else {
             writer.write(ast.getVariable().getJvmName());
         }
@@ -303,6 +295,8 @@ public final class Generator implements Ast.Visitor<Void> {
         if (ast.getArguments().size() == 1) {
             visit(ast.getArguments().get(0));
             writer.write(")");
+        } else if (ast.getArguments().size() == 0) {
+            writer.write(")");
         } else {
             for (int i = 0; i < ast.getArguments().size()-1; i++) {
                 visit(ast.getArguments().get(i));
@@ -312,7 +306,6 @@ public final class Generator implements Ast.Visitor<Void> {
             writer.write(")");
         }
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -330,7 +323,6 @@ public final class Generator implements Ast.Visitor<Void> {
             writer.write("}");
         }
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
 }
