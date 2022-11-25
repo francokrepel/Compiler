@@ -90,10 +90,10 @@ public final class Generator implements Ast.Visitor<Void> {
         writer.write(ast.getFunction().getReturnType().getJvmName() + " " + ast.getFunction().getName() + "(");
 
         if (ast.getParameters().size() == 1) {
-            writer.write(ast.getParameterTypeNames().get(0) + " " + ast.getParameters().get(0));
+            writer.write(ast.getParameterTypeNames().get(0) + " " + ast.getParameters().get(0)); //type name printing incorrectly
         } else if (ast.getParameters().size() > 1) {
             for (int i = 0; i < ast.getParameters().size()-1; i++) {
-                writer.write(ast.getParameterTypeNames().get(0) + " " + ast.getParameters().get(0));
+                writer.write(ast.getParameterTypeNames().get(0) + " " + ast.getParameters().get(0)); //type name printing incorrectly
                 writer.write(", ");
             }
             writer.write(ast.getParameterTypeNames().get(ast.getParameters().size()-1) + " " + ast.getParameters().get(0));
@@ -171,8 +171,8 @@ public final class Generator implements Ast.Visitor<Void> {
         visit(ast.getCondition());
         writer.write(") {");
 
-        newline(1);
         for (Ast.Statement.Case c : ast.getCases()) {
+            newline(1);
             visit(c);
         }
 
@@ -184,9 +184,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Case ast) {
-        //System.out.println(ast.getValue().get().getType().);
         if (ast.getValue().equals(Optional.empty())) {
-            newline(1);
             writer.write("default:");
             for (Ast.Statement s : ast.getStatements()) {
                 newline(2);
