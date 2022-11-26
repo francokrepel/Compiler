@@ -38,7 +38,6 @@ public final class Generator implements Ast.Visitor<Void> {
             visit(g);
         }
 
-        //newline(1);
         newline(1);
         writer.write("public static void main(String[] args) {");
         newline(2);
@@ -65,21 +64,21 @@ public final class Generator implements Ast.Visitor<Void> {
             visit(ast.getValue().get());
             writer.write(";");
         } else if (ast.getMutable()) {
-            writer.write(ast.getName() + " " + ast.getVariable().getName());
+            writer.write(ast.getVariable().getType().getJvmName() + " " + ast.getVariable().getName());
 
             if (ast.getValue().isPresent()) {
                 writer.write(" = ");
                 visit(ast.getValue().get());
-                writer.write(";");
             }
+            writer.write(";");
         } else {
-            writer.write("final " + ast.getName() + " " + ast.getVariable().getName());
+            writer.write("final " + ast.getVariable().getType().getJvmName() + " " + ast.getVariable().getName());
 
             if (ast.getValue().isPresent()) {
                 writer.write(" = ");
                 visit(ast.getValue().get());
-                writer.write(";");
             }
+            writer.write(";");
         }
         return null;
         //throw new UnsupportedOperationException(); //TODO
@@ -90,13 +89,13 @@ public final class Generator implements Ast.Visitor<Void> {
         writer.write(ast.getFunction().getReturnType().getJvmName() + " " + ast.getFunction().getName() + "(");
 
         if (ast.getParameters().size() == 1) {
-            writer.write(ast.getParameterTypeNames().get(0) + " " + ast.getParameters().get(0)); //type name printing incorrectly
+            writer.write(ast.getFunction().getParameterTypes().get(0).getJvmName() + " " + ast.getParameters().get(0)); //type name printing incorrectly
         } else if (ast.getParameters().size() > 1) {
             for (int i = 0; i < ast.getParameters().size()-1; i++) {
-                writer.write(ast.getParameterTypeNames().get(0) + " " + ast.getParameters().get(0)); //type name printing incorrectly
+                writer.write(ast.getFunction().getParameterTypes().get(i).getJvmName() + " " + ast.getParameters().get(i)); //type name printing incorrectly
                 writer.write(", ");
             }
-            writer.write(ast.getParameterTypeNames().get(ast.getParameters().size()-1) + " " + ast.getParameters().get(0));
+            writer.write(ast.getFunction().getParameterTypes().get(ast.getParameters().size()-1).getJvmName()+ " " + ast.getParameters().get(ast.getParameters().size()-1)); //type printing incorrectly
         }
         writer.write(") {");
 
@@ -111,7 +110,6 @@ public final class Generator implements Ast.Visitor<Void> {
             writer.write("}");
         }
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -179,7 +177,6 @@ public final class Generator implements Ast.Visitor<Void> {
         newline(0);
         writer.write("}");
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -200,7 +197,6 @@ public final class Generator implements Ast.Visitor<Void> {
             }
         }
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -220,7 +216,6 @@ public final class Generator implements Ast.Visitor<Void> {
             writer.write("}");
         }
         return null;
-        //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
