@@ -89,8 +89,12 @@ public final class Parser {
         if (match(Token.Type.IDENTIFIER)) {
             String identifier = tokens.get(-1).getLiteral();
             if (match(":")) {
-                type = tokens.get(0).getLiteral();
-                tokens.advance();
+                if (peek(Token.Type.IDENTIFIER)) {
+                    type = tokens.get(0).getLiteral();
+                    tokens.advance();
+                } else {
+                    throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                }
             }
             if (match("=")) {
                 if (match("[")) {
@@ -101,6 +105,9 @@ public final class Parser {
                         if (match("]")) {
                             return new Ast.Global(identifier, type,true, Optional.of(new Ast.Expression.PlcList(arguments)));
                         }
+                    }
+                    if (match("]")) {
+                        return new Ast.Global(identifier, type,true, Optional.of(new Ast.Expression.PlcList(arguments)));
                     }
                 }
             }
@@ -118,8 +125,12 @@ public final class Parser {
             Optional<Ast.Expression> value = Optional.empty();
             String type = "";
             if (match(":")) {
-                type = tokens.get(0).getLiteral();
-                tokens.advance();
+                if (peek(Token.Type.IDENTIFIER)) {
+                    type = tokens.get(0).getLiteral();
+                    tokens.advance();
+                } else {
+                    throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                }
             }
             if (match("=")) {
                 value = Optional.of(parseExpression());
@@ -138,8 +149,12 @@ public final class Parser {
             String identifier = tokens.get(-1).getLiteral();
             String type = "";
             if (match(":")) {
-                type = tokens.get(0).getLiteral();
-                tokens.advance();
+                if (peek(Token.Type.IDENTIFIER)) {
+                    type = tokens.get(0).getLiteral();
+                    tokens.advance();
+                } else {
+                    throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                }
             }
             if (match("=")) {
                 return new Ast.Global(identifier, type, false, Optional.of(parseExpression()));
@@ -163,8 +178,12 @@ public final class Parser {
                 if (match(Token.Type.IDENTIFIER)) {
                     parameters.add(tokens.get(-1).getLiteral());
                     if (match(":")) {
-                        types.add(tokens.get(0).getLiteral());
-                        tokens.advance();
+                        if (peek(Token.Type.IDENTIFIER)) {
+                            types.add(tokens.get(0).getLiteral());
+                            tokens.advance();
+                        } else {
+                            throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                        }
                     }
                     while (match(",")) {
                         if (peek(")")) {
@@ -174,15 +193,23 @@ public final class Parser {
                             parameters.add(tokens.get(-1).getLiteral());
                         }
                         if (match(":")) {
-                            types.add(tokens.get(0).getLiteral());
-                            tokens.advance();
+                            if (match(Token.Type.IDENTIFIER)) {
+                                types.add(tokens.get(0).getLiteral());
+                                tokens.advance();
+                            } else {
+                                throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                            }
                         }
                     }
                 }
                 if (match(")")) {
                     if (match(":")) {
-                        returnType = Optional.of(tokens.get(0).getLiteral());
-                        tokens.advance();
+                        if (peek(Token.Type.IDENTIFIER)) {
+                            returnType = Optional.of(tokens.get(0).getLiteral());
+                            tokens.advance();
+                        } else {
+                            throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                        }
                     }
                     if (match("DO")) {
                         List<Ast.Statement> statements = parseBlock();
@@ -263,9 +290,16 @@ public final class Parser {
             if (match("=")) {
                 value = Optional.of(parseExpression());
             } else if (match(":")) {
-                type = Optional.of(tokens.get(0).getLiteral());
-                value = Optional.empty();
-                tokens.advance();
+                if (peek(Token.Type.IDENTIFIER)) {
+                    type = Optional.of(tokens.get(0).getLiteral());
+                    value = Optional.empty();
+                    tokens.advance();
+                } else {
+                    throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                }
+                if (match("=")) {
+                    value = Optional.of(parseExpression());
+                }
             }
         }
         if (!match(";")) {
@@ -320,22 +354,20 @@ public final class Parser {
         } catch (ParseException p) {
             throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
         }
-
-        while (!match("DEFAULT")) {
+        while (!peek("DEFAULT")) {
+            if (peek("CASE")) {
+                cases.add(parseCaseStatement());
+            }
+        }
+        if (peek("DEFAULT")) {
             cases.add(parseCaseStatement());
+        } else {
+            throw new ParseException("Expected DEFAULT", tokens.get(-1).getIndex());
         }
-
-        if (!match("DEFAULT")) {
-            throw new ParseException("Expected DEFAULT", tokens.get(1).getIndex());
+        if (match("END")) {
+            return new Ast.Statement.Switch(e, cases);
         }
-
-        cases.add(parseCaseStatement());
-
-        if (!match("END")) {
-            throw new ParseException("Expected END", tokens.get(-1).getIndex());
-        }
-
-        return new Ast.Statement.Switch(e, cases);
+        throw new ParseException("Expected END", tokens.get(-1).getIndex());
     }
 
     /**
@@ -344,30 +376,44 @@ public final class Parser {
      * default block of a switch statement, aka {@code CASE} or {@code DEFAULT}.
      */
     public Ast.Statement.Case parseCaseStatement() throws ParseException {
-        Ast.Expression e;
+        Optional<Ast.Expression> e;
         List<Ast.Statement> statements = new ArrayList<Ast.Statement>();
 
-        try {
-            e = parseExpression();
-        } catch (ParseException p) {
-            throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
-        }
-
-        if (match("CASE")) {
-            if (!match(":")) {
-                throw new ParseException("Expected :", tokens.get(-1).getIndex());
-            }
-
+        if (match("DEFAULT")) {
+            e = Optional.empty();
             for (Ast.Statement s : parseBlock()) {
                 statements.add(s);
             }
-
-        } else if (match("DEFAULT")) {
-            for (Ast.Statement s : parseBlock()) {
-                statements.add(s);
+        } else if (match("CASE")) {
+            try {
+                e = Optional.ofNullable(parseExpression());
+            } catch (ParseException p) {
+                throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
             }
+            if (match(":")) {
+                for (Ast.Statement s : parseBlock()) {
+                    statements.add(s);
+                }
+            } else {
+                throw new ParseException("expected : ", tokens.get(-1).getIndex());
+            }
+        } else {
+            throw new ParseException("expected default or case", tokens.get(-1).getIndex());
         }
-        return new Ast.Statement.Case(Optional.ofNullable(e), statements);
+        return new Ast.Statement.Case(e, statements);
+//       if (match("CASE")) {
+//            if (!match(":")) {
+//                throw new ParseException("Expected :", tokens.get(-1).getIndex());
+//            }
+//            for (Ast.Statement s : parseBlock()) {
+//                statements.add(s);
+//            }
+//
+//        } else if (!e.isPresent()) {
+//            for (Ast.Statement s : parseBlock()) {
+//                statements.add(s);
+//            }
+//        }
         //TODO
     }
 
@@ -556,7 +602,8 @@ public final class Parser {
                 if (match("]")) {
                     return new Ast.Expression.Access(Optional.of(expression), identifier);
                 }
-            } else { // only identifier ?
+            } else {
+                // only identifier ?
                 return new Ast.Expression.Access(Optional.empty(), identifier);
             }
         }
