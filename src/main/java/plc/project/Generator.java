@@ -158,6 +158,8 @@ public final class Generator implements Ast.Visitor<Void> {
                 newline(2);
                 visit(s);
             }
+            newline(2);
+            print("break;");
         }
         return null;
         //throw new UnsupportedOperationException(); //TODO
