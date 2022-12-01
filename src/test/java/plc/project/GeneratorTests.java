@@ -157,6 +157,7 @@ public class GeneratorTests {
                         //     CASE 'y':
                         //         print("yes");
                         //         letter = 'n';
+                        //         break;
                         //     DEFAULT
                         //         print("no");
                         // END
@@ -194,6 +195,7 @@ public class GeneratorTests {
                                 "    case 'y':",
                                 "        System.out.println(\"yes\");",
                                 "        letter = 'n';",
+                                "        break;",
                                 "    default:",
                                 "        System.out.println(\"no\");",
                                 "}"
