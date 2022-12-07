@@ -61,19 +61,33 @@ public class GeneratorTests {
 
     @Test
     void testList() {
-        // LIST list: Decimal = [1.0, 1.5, 2.0];
-        Ast.Expression.Literal expr1 = new Ast.Expression.Literal(new BigDecimal("1.0"));
-        Ast.Expression.Literal expr2 = new Ast.Expression.Literal(new BigDecimal("1.5"));
-        Ast.Expression.Literal expr3 = new Ast.Expression.Literal(new BigDecimal("2.0"));
-        expr1.setType(Environment.Type.DECIMAL);
-        expr2.setType(Environment.Type.DECIMAL);
-        expr3.setType(Environment.Type.DECIMAL);
+        // LIST nums: Integer = [1, 2, 3];
+        Ast.Expression.Literal expr1 = new Ast.Expression.Literal(new BigInteger("1"));
+        Ast.Expression.Literal expr2 = new Ast.Expression.Literal(new BigInteger("2"));
+        Ast.Expression.Literal expr3 = new Ast.Expression.Literal(new BigInteger("3"));
+        expr1.setType(Environment.Type.INTEGER);
+        expr2.setType(Environment.Type.INTEGER);
+        expr3.setType(Environment.Type.INTEGER);
 
-        Ast.Global global = new Ast.Global("list", "Decimal", true, Optional.of(new Ast.Expression.PlcList(Arrays.asList(expr1, expr2, expr3))));
-        Ast.Global astList = init(global, ast -> ast.setVariable(new Environment.Variable("list", "list", Environment.Type.DECIMAL, true, Environment.create(Arrays.asList(new Double(1.0), new Double(1.5), new Double(2.0))))));
+        Ast.Global global = new Ast.Global("list", "Integer", true, Optional.of(new Ast.Expression.PlcList(Arrays.asList(expr1, expr2, expr3))));
+        Ast.Global astList = init(global, ast -> ast.setVariable(new Environment.Variable("nums", "list", Environment.Type.INTEGER, true, Environment.create(Arrays.asList(new Integer(1), new Integer(2), new Integer(3))))));
 
-        String expected = new String("double[] list = {1.0, 1.5, 2.0};");
+        String expected = new String("int[] nums = {1, 2, 3};");
         test(astList, expected);
+//
+//        // LIST list: Decimal = [1.0, 1.5, 2.0];
+//        Ast.Expression.Literal expr1 = new Ast.Expression.Literal(new BigDecimal("1.0"));
+//        Ast.Expression.Literal expr2 = new Ast.Expression.Literal(new BigDecimal("1.5"));
+//        Ast.Expression.Literal expr3 = new Ast.Expression.Literal(new BigDecimal("2.0"));
+//        expr1.setType(Environment.Type.DECIMAL);
+//        expr2.setType(Environment.Type.DECIMAL);
+//        expr3.setType(Environment.Type.DECIMAL);
+//
+//        Ast.Global global = new Ast.Global("list", "Decimal", true, Optional.of(new Ast.Expression.PlcList(Arrays.asList(expr1, expr2, expr3))));
+//        Ast.Global astList = init(global, ast -> ast.setVariable(new Environment.Variable("list", "list", Environment.Type.DECIMAL, true, Environment.create(Arrays.asList(new Double(1.0), new Double(1.5), new Double(2.0))))));
+//
+//        String expected = new String("double[] list = {1.0, 1.5, 2.0};");
+//        test(astList, expected);
     }
 
     @ParameterizedTest(name = "{0}")
@@ -157,8 +171,18 @@ public class GeneratorTests {
                         //     CASE 'y':
                         //         print("yes");
                         //         letter = 'n';
+                        //         break;
                         //     DEFAULT
                         //         print("no");
+                        //      END
+
+                        // SWITCH num
+                        //      CASE 1:
+                        //          print("num is 1.");
+                        //      CASE 2:
+                        //          print("num is 2.");
+                        // DEFAULT
+                        //      print("num is greater than 2.");
                         // END
                         new Ast.Statement.Switch(
                                 init(new Ast.Expression.Access(Optional.empty(), "letter"), ast -> ast.setVariable(new Environment.Variable("letter", "letter", Environment.Type.CHARACTER, true, Environment.create('y')))),
@@ -194,6 +218,7 @@ public class GeneratorTests {
                                 "    case 'y':",
                                 "        System.out.println(\"yes\");",
                                 "        letter = 'n';",
+                                "        break;",
                                 "    default:",
                                 "        System.out.println(\"no\");",
                                 "}"

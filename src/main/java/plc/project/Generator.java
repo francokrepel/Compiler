@@ -37,7 +37,6 @@ public final class Generator implements Ast.Visitor<Void> {
             newline(1);
             visit(g);
         }
-
         newline(1);
         writer.write("public static void main(String[] args) {");
         newline(2);
@@ -49,8 +48,9 @@ public final class Generator implements Ast.Visitor<Void> {
         for (Ast.Function f : ast.getFunctions()) {
             newline(1);
             visit(f);
+            newline(0);
         }
-        newline(0);
+
         newline(0);
         writer.write("}");
         return null;
@@ -65,7 +65,6 @@ public final class Generator implements Ast.Visitor<Void> {
             writer.write(";");
         } else if (ast.getMutable()) {
             writer.write(ast.getVariable().getType().getJvmName() + " " + ast.getVariable().getName());
-
             if (ast.getValue().isPresent()) {
                 writer.write(" = ");
                 visit(ast.getValue().get());
@@ -81,7 +80,7 @@ public final class Generator implements Ast.Visitor<Void> {
             writer.write(";");
         }
         return null;
-        //throw new UnsupportedOperationException(); //TODO
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -168,7 +167,6 @@ public final class Generator implements Ast.Visitor<Void> {
         writer.write("switch (");
         visit(ast.getCondition());
         writer.write(") {");
-
         for (Ast.Statement.Case c : ast.getCases()) {
             newline(1);
             visit(c);
@@ -195,6 +193,8 @@ public final class Generator implements Ast.Visitor<Void> {
                 newline(2);
                 visit(s);
             }
+            newline(2);
+            print("break;");
         }
         return null;
     }
