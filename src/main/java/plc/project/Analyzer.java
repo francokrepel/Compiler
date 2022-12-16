@@ -167,10 +167,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
             visit(ast.getCases().get(i));
             requireAssignable(ast.getCondition().getType(), ast.getCases().get(i).getValue().get().getType());
         }
-        visit(ast.getCases().get(ast.getCases().size()-1));
-
-
-
 
 //        try {
 ////            scope = new Scope(scope);
@@ -248,8 +244,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
             ast.setType(Environment.Type.INTEGER);
         } else if (literal instanceof BigDecimal) {
             BigDecimal val = (BigDecimal) ast.getLiteral();
-            if (val.doubleValue() == Double.NEGATIVE_INFINITY || val.doubleValue() == Double.POSITIVE_INFINITY || val.doubleValue() < Double
-                    .MIN_VALUE) { //DOUBLE CHECK THIS ONE
+            if (val.doubleValue() == Double.NEGATIVE_INFINITY || val.doubleValue() == Double.POSITIVE_INFINITY ||
+                    val.doubleValue() < Double.MIN_VALUE || val.doubleValue() > Double.MAX_VALUE) { //DOUBLE CHECK THIS ONE
                 throw new RuntimeException("Decimal size overflow");
             }
             ast.setType(Environment.Type.DECIMAL);

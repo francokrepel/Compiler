@@ -407,7 +407,17 @@ public final class AnalyzerTests {
                         // 9223372036854775807
                         new Ast.Expression.Literal(BigInteger.valueOf(Long.MAX_VALUE)),
                         null
+                ),
+                Arguments.of("Decimal Valid",
+                        // 9223372036854775807
+                        new Ast.Expression.Literal(BigDecimal.valueOf(Double.MAX_VALUE)),
+                        init(new Ast.Expression.Literal(BigDecimal.valueOf(Double.MAX_VALUE)), ast -> ast.setType(Environment.Type.DECIMAL))
                 )
+//                Arguments.of("Decimal Invalid",
+//                        // 9223372036854775807
+//                        new Ast.Expression.Literal(BigDecimal.valueOf(Double.MAX_VALUE)),
+//                        null
+//                )
         );
     }
 

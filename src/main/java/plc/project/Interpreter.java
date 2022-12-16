@@ -69,29 +69,33 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Source ast) {
-        List<Ast.Global> g = ast.getGlobals();
-        List<Ast.Function> f = ast.getFunctions();
+        List<Ast.Global> globals = ast.getGlobals();
+        List<Ast.Function> functions = ast.getFunctions();
+        //            scope.defineVariable(g.getName(), g.getMutable(), visit(g.getValue().get()));
+        //            scope.defineFunction(f.getName(), f.getParameters().size(), f.getStatements());
+        globals.forEach(this::visit);
+        functions.forEach(this::visit);
+        return scope.lookupFunction("main", 0).invoke(new ArrayList<>());
 
-        for (Ast.Global globe : g) {
-            scope.defineVariable(globe.getName(), globe.getMutable(), visit(globe.getValue().get()));
-        }
 
-        for (Ast.Function func : f) {
-            //scope.defineFunction(func.getName(), func.getParameters().size(), func.getStatements());
-        }
-        return Environment.NIL;
+//        for (Ast.Global globe : g) {
+//            scope.defineVariable(globe.getName(), globe.getMutable(), visit(globe.getValue().get()));
+//        }
+//
+//        for (Ast.Function func : f) {
+//            scope.defineFunction(func.getName(), func.getParameters().size(), func.getStatements());
+//        }
+//        return Environment.NIL;
         //throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Global ast) {
 
-        Optional optional = ast.getValue();
-        Boolean present = optional.isPresent();
+        Boolean present = ast.getValue().isPresent();
 
         if (present) {
-            Ast.Expression expr = (Ast.Expression) optional.get();
-
+            Ast.Expression expr = (Ast.Expression) ast.getValue().get();
             scope.defineVariable(ast.getName(), true, visit(expr));
         } else {
             scope.defineVariable(ast.getName(), true, Environment.NIL);
@@ -103,17 +107,40 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Function ast) {
 
-        Scope sp = scope; //this needs to be a child of the scope where the function was called
-
-        for (String s : ast.getParameters()) { //declare and define the parameters
-            scope.defineVariable(s, false, null); //I think this declares the variables since parameters do not have values
-        }
-
-        ast.getStatements().forEach(this::visit); //evaluate all the statements
-
-        scope = sp.getParent(); //return to the original scope
-
+        scope.defineFunction(
+                ast.getName(),
+                ast.getParameters().size(),
+                args -> {
+                    try {
+                        Scope papa = scope;
+                        int iter = 0;
+                        for (String s : ast.getParameters()) { //declare and define the parameters
+                            scope.defineVariable(s, false, args.get(iter)); //I think this declares the variables since parameters do not have values
+                            iter++;
+                        }
+                        ast.getStatements().forEach(this::visit); //evaluate all the statements
+                    } catch (Return r) {
+                        return r.value;
+                    }
+                    finally {
+                        scope = scope.getParent();
+                    }
+                    return Environment.NIL;
+                    }
+                );
         return Environment.NIL;
+
+//
+//        Scope papa = scope; //this needs to be a child of the scope where the function was called
+//        for (String s : ast.getParameters()) { //declare and define the parameters
+//            scope.defineVariable(s, false, null); //I think this declares the variables since parameters do not have values
+//        }
+//
+//        ast.getStatements().forEach(this::visit); //evaluate all the statements
+//
+//        scope = papa.getParent(); //return to the original scope
+//
+//        return Environment.NIL;
         //throw new UnsupportedOperationException(); //TODO
     }
 
@@ -236,8 +263,9 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Return ast) {
-        Environment.PlcObject val = new Environment.PlcObject(scope, visit(ast.getValue()).getValue());
-        System.out.println(visit(ast.getValue()).getValue());
+//        Environment.PlcObject val = new Environment.PlcObject(scope, visit(ast.getValue()).getValue());
+        Environment.PlcObject val = visit(ast.getValue());
+//        System.out.println(visit(ast.getValue()).getValue());
         throw new Return(val);
 //        throw new UnsupportedOperationException(); //TODO
     }
@@ -320,9 +348,17 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 case "*":
                     return Environment.create(requireType(BigInteger.class ,visit(ast.getLeft())).multiply(requireType(BigInteger.class, visit(ast.getRight()))));
                 case "/": //returns ceiling
+                    if (ast.getRight().equals(new BigInteger("0"))) {
+                        throw new RuntimeException("bro u cant divide by 0");
+                    }
                     return Environment.create(requireType(BigInteger.class ,visit(ast.getLeft())).divide(requireType(BigInteger.class, visit(ast.getRight()))));
                 case "^":
-                    return Environment.create(requireType(BigInteger.class ,visit(ast.getLeft())).modPow(requireType(BigInteger.class,visit(ast.getRight())), new BigInteger("9223372036854775807")));
+                    BigInteger result = requireType(BigInteger.class ,visit(ast.getLeft()));
+                    BigInteger left = result;
+                    for (int i = 1; i < requireType(BigInteger.class,visit(ast.getRight())).intValue(); i++) {
+                        result = result.multiply(left);
+                    }
+                    return Environment.create(result);
                 case "<":
             }
         }
@@ -336,6 +372,9 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 case "*":
                     return Environment.create(requireType(BigDecimal.class ,visit(ast.getLeft())).multiply(requireType(BigDecimal.class, visit(ast.getRight()))));
                 case "/":
+                    if (ast.getRight().equals(new BigDecimal("0.0")) || ast.getRight().equals(new BigInteger("0"))) {
+                        throw new RuntimeException("bro u cant divide by 0");
+                    }
                     return Environment.create(requireType(BigDecimal.class ,visit(ast.getLeft())).divide(requireType(BigDecimal.class, visit(ast.getRight())), RoundingMode.HALF_EVEN));
                 //it seems that there is no way to do power of two big Decimals
 //                case "^":

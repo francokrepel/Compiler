@@ -25,10 +25,17 @@ public final class Parser {
         this.tokens = new TokenStream(tokens);
     }
 
+    private ParseException DobbyParserException(String exception) {
+        if (tokens.has(0)) {
+            return new ParseException(exception, tokens.get(0).getIndex());
+        }
+        //were going to return the index of the recent token plus the length of the inputted one to get the end
+        return new ParseException(exception, tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+    }
     /**
      * Parses the {@code source} rule.
      */
-    public Ast.Source parseSource() throws ParseException {
+    public Ast.Source parseSource() throws ParseException   {
         List<Ast.Global> global = new ArrayList<Ast.Global>();
         List<Ast.Function> func = new ArrayList<Ast.Function>();
         try {
@@ -247,7 +254,7 @@ public final class Parser {
      */
     public Ast.Statement parseStatement() throws ParseException {
 
-        if (match("LET")) {
+         if (match("LET")) {
             return parseDeclarationStatement();
         } else if (match("SWITCH")) {
             return parseSwitchStatement();
@@ -468,7 +475,6 @@ public final class Parser {
     public Ast.Expression parseExpression() throws ParseException {
         return parseLogicalExpression();
     }
-
 
     /**
      * Parses the {@code logical-expression} rule.

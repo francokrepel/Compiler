@@ -115,7 +115,7 @@ final class InterpreterTests {
     @Test
     void testExpressionStatement() {
         // print("Hello, World!");
-        PrintStream sysout = System.out;
+            PrintStream sysout = System.out;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         System.setOut(new PrintStream(out));
         try {
