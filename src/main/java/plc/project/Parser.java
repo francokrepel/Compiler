@@ -25,12 +25,12 @@ public final class Parser {
         this.tokens = new TokenStream(tokens);
     }
 
-    private ParseException DobbyParserException(String exception) {
+    private int exceptionIndex() {
         if (tokens.has(0)) {
-            return new ParseException(exception, tokens.get(0).getIndex());
+            return tokens.get(0).getIndex();
         }
         //were going to return the index of the recent token plus the length of the inputted one to get the end
-        return new ParseException(exception, tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+        return tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
     }
     /**
      * Parses the {@code source} rule.
@@ -47,13 +47,13 @@ public final class Parser {
                 if (match("FUN")) {
                     func.add(parseFunction());
                     if (peek("LIST") || peek("VAR") || peek("VAL")) { //global after function
-                        throw new ParseException("Function after Global", tokens.get(-1).getIndex());
+                        throw new ParseException("Function after Global", exceptionIndex());
                     }
                 }
             }
             return new Ast.Source(global, func);
         } catch (ParseException e) {
-            throw new ParseException("Invalid parseSource expression at  ", tokens.get(-1).getIndex());
+            throw new ParseException("Invalid parseSource expression at  ", exceptionIndex());
         }
         //TODO
     }
@@ -67,23 +67,23 @@ public final class Parser {
         if (match("LIST")) {
             Ast.Global list = parseList();
             if (!match(";")) {
-                throw new ParseException("Missing ; at  ", tokens.get(-1).getIndex());
+                throw new ParseException("Missing ; at  ",exceptionIndex());
             }
             return list;
         } else if (match("VAR")) {
             Ast.Global mutable = parseMutable();
             if (!match(";")) {
-                throw new ParseException("Missing ; at  ", tokens.get(-1).getIndex());
+                throw new ParseException("Missing ; at  ",exceptionIndex());
             }
             return mutable;
         } else if (match("VAL")) {
             Ast.Global immutable = parseImmutable();
             if (!match(";")) {
-                throw new ParseException("Missing ; at  ", tokens.get(-1).getIndex());
+                throw new ParseException("Missing ; at  ", exceptionIndex());
             }
             return immutable;
         }
-        throw new ParseException("parseGlobal exception at ", tokens.get(-1).getIndex());
+        throw new ParseException("parseGlobal exception at ", exceptionIndex());
     }
 
     /**
@@ -100,7 +100,7 @@ public final class Parser {
                     type = tokens.get(0).getLiteral();
                     tokens.advance();
                 } else {
-                    throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                    throw new ParseException("Bad Type given at:  ", exceptionIndex());
                 }
             }
             if (match("=")) {
@@ -119,7 +119,7 @@ public final class Parser {
                 }
             }
         }
-        throw new ParseException("parseList Exception at ", tokens.get(-1).getIndex());
+        throw new ParseException("parseList Exception at ", exceptionIndex());
     }
 
     /**
@@ -136,7 +136,7 @@ public final class Parser {
                     type = tokens.get(0).getLiteral();
                     tokens.advance();
                 } else {
-                    throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                    throw new ParseException("Bad Type given at:  ", exceptionIndex());
                 }
             }
             if (match("=")) {
@@ -144,7 +144,7 @@ public final class Parser {
             }
             return new Ast.Global(identifier, type,true, value);
         }
-        throw new ParseException("parseMutable Exception at ", tokens.get(-1).getIndex());
+        throw new ParseException("parseMutable Exception at ", exceptionIndex());
     }
 
     /**
@@ -160,14 +160,14 @@ public final class Parser {
                     type = tokens.get(0).getLiteral();
                     tokens.advance();
                 } else {
-                    throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                    throw new ParseException("Bad Type given at:  ", exceptionIndex());
                 }
             }
             if (match("=")) {
                 return new Ast.Global(identifier, type, false, Optional.of(parseExpression()));
             }
         }
-        throw new ParseException("parseImmutable Exception at ", tokens.get(-1).getIndex());
+        throw new ParseException("parseImmutable Exception at ", exceptionIndex());
     }
 
     /**
@@ -189,7 +189,7 @@ public final class Parser {
                             types.add(tokens.get(0).getLiteral());
                             tokens.advance();
                         } else {
-                            throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                            throw new ParseException("Bad Type given at:  ", exceptionIndex());
                         }
                     }
                     while (match(",")) {
@@ -204,7 +204,7 @@ public final class Parser {
                                 types.add(tokens.get(0).getLiteral());
                                 tokens.advance();
                             } else {
-                                throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                                throw new ParseException("Bad Type given at:  ", exceptionIndex());
                             }
                         }
                     }
@@ -215,7 +215,7 @@ public final class Parser {
                             returnType = Optional.of(tokens.get(0).getLiteral());
                             tokens.advance();
                         } else {
-                            throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                            throw new ParseException("Bad Type given at:  ", exceptionIndex());
                         }
                     }
                     if (match("DO")) {
@@ -227,7 +227,7 @@ public final class Parser {
                 }
             }
         }
-        throw new ParseException("parseFunction Exception at ", tokens.get(-1).getIndex());
+        throw new ParseException("parseFunction Exception at ", exceptionIndex());
     }
 
     /**
@@ -241,7 +241,7 @@ public final class Parser {
                 block.add(parseStatement());
             }
         } catch (ParseException p) {
-            throw new ParseException("Expected statement", tokens.get(-1).getIndex());
+            throw new ParseException("Expected statement", exceptionIndex());
         }
         return block;
         //TODO
@@ -276,7 +276,7 @@ public final class Parser {
                 return new Ast.Statement.Expression(lhs);
             }
         }
-        throw new ParseException("parseStatement", tokens.get(-1).getIndex());
+        throw new ParseException("exception at parsestatement", exceptionIndex());
     }
 
     /**
@@ -286,7 +286,7 @@ public final class Parser {
      */
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
         if (!match(Token.Type.IDENTIFIER)) {
-            throw new ParseException("Expected Identifier", tokens.get(-1).getIndex());
+            throw new ParseException("Expected Identifier", exceptionIndex());
         }
 
         String name = tokens.get(-1).getLiteral();
@@ -302,7 +302,7 @@ public final class Parser {
                     value = Optional.empty();
                     tokens.advance();
                 } else {
-                    throw new ParseException("Bad Type given at:  ", tokens.get(-1).getIndex());
+                    throw new ParseException("Bad Type given at:  ", exceptionIndex());
                 }
                 if (match("=")) {
                     value = Optional.of(parseExpression());
@@ -310,7 +310,7 @@ public final class Parser {
             }
         }
         if (!match(";")) {
-            throw new ParseException("Expected Semicolon", tokens.get(-1).getIndex());
+            throw new ParseException("Expected Semicolon", exceptionIndex());
         }
         return new Ast.Statement.Declaration(name, type, value);
     }
@@ -328,7 +328,7 @@ public final class Parser {
         try {
             e = parseExpression();
         } catch (ParseException p) {
-            throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
+            throw new ParseException("Expected Expression", exceptionIndex());
         }
 
         if (match("DO")) {
@@ -342,7 +342,7 @@ public final class Parser {
             }
         }
         if (!match("END")) {
-            throw new ParseException("Expected END", tokens.get(-1).getIndex());
+            throw new ParseException("Expected END", exceptionIndex());
         }
         return new Ast.Statement.If(e, then, els);
     }
@@ -359,7 +359,7 @@ public final class Parser {
         try {
             e = parseExpression();
         } catch (ParseException p) {
-            throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
+            throw new ParseException("Expected Expression", exceptionIndex());
         }
         while (!peek("DEFAULT")) {
             if (peek("CASE")) {
@@ -369,17 +369,17 @@ public final class Parser {
         if (peek("DEFAULT")) {
             cases.add(parseCaseStatement());
         } else {
-            throw new ParseException("Expected DEFAULT", tokens.get(-1).getIndex());
+            throw new ParseException("Expected DEFAULT", exceptionIndex());
         }
         if (match("END")) {
             return new Ast.Statement.Switch(e, cases);
         }
-        throw new ParseException("Expected END", tokens.get(-1).getIndex());
+        throw new ParseException("Expected END", exceptionIndex());
     }
 
     /**
-     * Parses a case or default statement block from the {@code switch} rule. 
-     * This method should only be called if the next tokens start the case or 
+     * Parses a case or default statement block from the {@code switch} rule.
+     * This method should only be called if the next tokens start the case or
      * default block of a switch statement, aka {@code CASE} or {@code DEFAULT}.
      */
     public Ast.Statement.Case parseCaseStatement() throws ParseException {
@@ -395,22 +395,22 @@ public final class Parser {
             try {
                 e = Optional.ofNullable(parseExpression());
             } catch (ParseException p) {
-                throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
+                throw new ParseException("Expected Expression", exceptionIndex());
             }
             if (match(":")) {
                 for (Ast.Statement s : parseBlock()) {
                     statements.add(s);
                 }
             } else {
-                throw new ParseException("expected : ", tokens.get(-1).getIndex());
+                throw new ParseException("expected : ", exceptionIndex());
             }
         } else {
-            throw new ParseException("expected default or case", tokens.get(-1).getIndex());
+            throw new ParseException("expected default or case", exceptionIndex());
         }
         return new Ast.Statement.Case(e, statements);
 //       if (match("CASE")) {
 //            if (!match(":")) {
-//                throw new ParseException("Expected :", tokens.get(-1).getIndex());
+//                throw new ParseException("Expected :", exceptionIndex());
 //            }
 //            for (Ast.Statement s : parseBlock()) {
 //                statements.add(s);
@@ -436,7 +436,7 @@ public final class Parser {
         try {
             e = parseExpression();
         } catch (ParseException p) {
-            throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
+            throw new ParseException("Expected Expression", exceptionIndex());
         }
 
         if (match("DO")) {
@@ -446,7 +446,7 @@ public final class Parser {
         }
 
         if (!match("END")) {
-            throw new ParseException("Expected END", tokens.get(-1).getIndex());
+            throw new ParseException("Expected END", exceptionIndex());
         }
         return new Ast.Statement.While(e, statements);
     }
@@ -461,10 +461,10 @@ public final class Parser {
         try {
             e = parseExpression();
         } catch (ParseException p) {
-            throw new ParseException("Expected Expression", tokens.get(-1).getIndex());
+            throw new ParseException("Expected Expression", exceptionIndex());
         }
         if (!match(";")) {
-            throw new ParseException("Expected Semicolon", tokens.get(-1).getIndex());
+            throw new ParseException("Expected Semicolon", exceptionIndex());
         }
         return new Ast.Statement.Return(e);
     }
@@ -613,7 +613,7 @@ public final class Parser {
                 return new Ast.Expression.Access(Optional.empty(), identifier);
             }
         }
-        throw new ParseException("Invalid primary expression at: ", tokens.get(-1).getIndex());
+        throw new ParseException("Invalid primary expression at: ", exceptionIndex());
     }
 
     /**
